@@ -1,0 +1,60 @@
+---
+import { getAllCategories } from '../lib/wordpress';
+
+const categories = await getAllCategories();
+const sortedCategories = [...categories].sort((a, b) => b.count - a.count);
+
+// Tomar solo las 6 categorías más populares
+const topCategories = sortedCategories.slice(0, 6);
+
+// Definir colores para cada categoría
+const categoryColors = {
+  default: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  primary: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary',
+  success: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  warning: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  danger: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  info: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+};
+
+// Función para asignar colores de manera cíclica
+const getCategoryColor = (index) => {
+  const colors = Object.values(categoryColors);
+  return colors[index % colors.length];
+};
+---
+
+<div class="topics-section">
+  {topCategories.length > 0 ? (
+    <div class="space-y-4">
+      {topCategories.map((category, index) => (
+        <a
+          href={`/${category.slug}`}
+          class={`block p-4 rounded-xl ${getCategoryColor(index)} hover:opacity-90 transition-all group`}
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-lg bg-white/50 dark:bg-black/20 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                  <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold">{category.name}</h3>
+                <p class="text-sm opacity-75">{category.count} artículos</p>
+              </div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <div class="text-gray-500 dark:text-gray-400 italic text-center py-4">
+      No hay temas disponibles
+    </div>
+  )}
+</div>

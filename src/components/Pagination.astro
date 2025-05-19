@@ -1,0 +1,153 @@
+---
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  baseUrl: string;
+}
+
+const { currentPage, totalPages, baseUrl } = Astro.props;
+
+// Función para generar URL de página usando siempre parámetros de consulta
+function getPageUrl(pageNum: number): string {
+  // Limpiar la URL base de cualquier parámetro page existente
+  let cleanBaseUrl = baseUrl;
+  
+  // Para la primera página, eliminamos el parámetro page si existe
+  if (pageNum === 1) {
+    // Si la URL tiene ?page=X como único parámetro
+    if (cleanBaseUrl.match(/\?page=\d+$/)) {
+      return cleanBaseUrl.replace(/\?page=\d+$/, '');
+    }
+    // Si la URL tiene &page=X en medio de otros parámetros
+    if (cleanBaseUrl.includes('&page=')) {
+      return cleanBaseUrl.replace(/&page=\d+/, '');
+    }
+    return cleanBaseUrl;
+  }
+  
+  // Para otras páginas, añadimos el parámetro page
+  if (cleanBaseUrl.includes('?')) {
+    // Ya tiene otros parámetros de consulta
+    return `${cleanBaseUrl}${cleanBaseUrl.includes('?') ? '&' : '?'}page=${pageNum}`;
+  } else {
+    // No tiene parámetros de consulta
+    return `${cleanBaseUrl}?page=${pageNum}`;
+  }
+}
+
+// Generar URLs para navegación
+const prevUrl = currentPage > 1 ? getPageUrl(currentPage - 1) : null;
+const nextUrl = currentPage < totalPages ? getPageUrl(currentPage + 1) : null;
+
+// Determinar qué páginas mostrar (diseño minimalista)
+function getVisiblePageNumbers(current: number, total: number, maxVisible: number = 5): number[] {
+  if (total <= 1) {
+    return []; // No mostrar paginación si solo hay una página
+  }
+  
+  if (total <= maxVisible) {
+    // Si hay pocas páginas, mostrar todas
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  
+  // Enfoque minimalista: mostrar solo un rango limitado alrededor de la página actual
+  const result: number[] = [];
+  
+  // Siempre incluir la primera página
+  result.push(1);
+  
+  // Calcular el rango central (página actual y adyacentes)
+  const sidePages = Math.floor((maxVisible - 3) / 2); // -3 por primera, última y página actual
+  
+  // Determinar el rango de páginas a mostrar
+  let rangeStart = Math.max(2, current - sidePages);
+  let rangeEnd = Math.min(total - 1, current + sidePages);
+  
+  // Ajustar el rango si estamos cerca de los extremos
+  if (current <= sidePages + 1) {
+    // Cerca del inicio, extender hacia la derecha
+    rangeEnd = Math.min(total - 1, maxVisible - 1);
+  } else if (current >= total - sidePages) {
+    // Cerca del final, extender hacia la izquierda
+    rangeStart = Math.max(2, total - maxVisible + 1);
+  }
+  
+  // Añadir páginas del rango
+  for (let i = rangeStart; i <= rangeEnd; i++) {
+    result.push(i);
+  }
+  
+  // Siempre incluir la última página si no está ya incluida
+  if (rangeEnd < total) {
+    result.push(total);
+  }
+  
+  return result;
+}
+
+const visiblePages = getVisiblePageNumbers(currentPage, totalPages);
+---
+
+{totalPages > 1 && (
+  <div class="flex flex-wrap justify-center items-center mt-8 space-x-3">
+    {/* Botón Anterior */}
+    {prevUrl ? (
+      <a 
+        href={prevUrl} 
+        class="flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+        aria-label="Ir a la página anterior"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Anterior</span>
+      </a>
+    ) : (
+      <span class="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-400 dark:text-gray-500 cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Anterior</span>
+      </span>
+    )}
+    
+    {/* Números de página minimalistas */}
+    <div class="flex items-center space-x-2 mx-2">
+      {visiblePages.map((pageNum) => (
+        <a 
+          href={getPageUrl(pageNum)}
+          class={`w-10 h-10 flex items-center justify-center rounded-md transition-colors ${
+            pageNum === currentPage 
+              ? 'bg-primary text-white font-medium shadow-sm' 
+              : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+          }`}
+          aria-label={`Ir a la página ${pageNum}`}
+          aria-current={pageNum === currentPage ? 'page' : undefined}
+        >
+          {pageNum}
+        </a>
+      ))}
+    </div>
+    
+    {/* Botón Siguiente */}
+    {nextUrl ? (
+      <a 
+        href={nextUrl} 
+        class="flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+        aria-label="Ir a la página siguiente"
+      >
+        <span>Siguiente</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    ) : (
+      <span class="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-400 dark:text-gray-500 cursor-not-allowed">
+        <span>Siguiente</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </span>
+    )}
+  </div>
+)}

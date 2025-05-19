@@ -1,0 +1,192 @@
+---
+// Componente para mostrar artículos de una categoría específica en formato Storylines
+// Basado en el diseño de referencia compartido
+import { getPostsByCategory } from "../lib/wordpress";
+import { getPostImage } from '../utils/getPostImage';
+import { getReadingTime } from '../utils/readingTime';
+
+interface Props {
+  categorySlug: string;
+  categoryTitle?: string;
+  maxPosts?: number;
+}
+
+const { categorySlug, categoryTitle, maxPosts = 6 } = Astro.props;
+
+// Obtener posts de la categoría especificada
+const { posts } = await getPostsByCategory(categorySlug, 1, maxPosts);
+
+// Título por defecto si no se proporciona uno
+const displayTitle = categoryTitle || (posts.length > 0 && posts[0].categories?.nodes?.[0]?.name) || categorySlug;
+---
+
+<section class="storylines-section py-12 w-full bg-gray-50 dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6 px-4 md:px-8">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
+          {displayTitle}
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Mantente al día con los temas tendencia</p>
+      </div>
+      <a href={`/${categorySlug}`} class="text-primary hover:underline flex items-center text-sm font-medium group">
+        <span>Ver más</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+
+    {posts.length > 0 ? (
+      <div class="relative">
+        <div class="px-4 md:px-8 overflow-x-auto pb-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:flex md:space-x-4 pb-2 scrollbar-hide" style="scroll-snap-type: x mandatory; overflow-x: auto; mask-image: linear-gradient(to right, black 80%, transparent 98%);">
+          {posts.slice(0, 4).map((post, index) => {
+            // Determinar la categoría principal para el icono
+            const category = post.categories?.nodes?.[0];
+            const categoryName = category?.name || "General";
+            const categorySlug = category?.slug || "general";
+            
+            // Determinar el icono de la categoría (usando las primeras letras del nombre de la categoría)
+            const categoryInitials = categoryName.substring(0, 2).toUpperCase();
+            
+            // Determinar el color de fondo del icono basado en la categoría
+            let bgColorClass = "bg-blue-100 text-blue-600";
+            if (categoryName.toLowerCase().includes("tech") || categoryName.toLowerCase().includes("tecnolog")) {
+              bgColorClass = "bg-blue-100 text-blue-600";
+            } else if (categoryName.toLowerCase().includes("empresa") || categoryName.toLowerCase().includes("negocio")) {
+              bgColorClass = "bg-purple-100 text-purple-600";
+            } else if (categoryName.toLowerCase().includes("hardware") || categoryName.toLowerCase().includes("equipo")) {
+              bgColorClass = "bg-orange-100 text-orange-600";
+            } else if (categoryName.toLowerCase().includes("transformaci") || categoryName.toLowerCase().includes("cambio")) {
+              bgColorClass = "bg-red-100 text-red-600";
+            } else if (categoryName.toLowerCase().includes("laberinto")) {
+              bgColorClass = "bg-green-100 text-green-600";
+            }
+            
+            return (
+              <div class="storyline-card bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all group md:min-w-[280px] md:max-w-[320px] flex-shrink-0" style="scroll-snap-align: start;">
+                <div class="aspect-video overflow-hidden relative mb-2">
+                  <img 
+                    src={getPostImage(post).url} 
+                    alt={getPostImage(post).alt || post.title}
+                    class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div class="absolute top-2 left-2">
+                    <div class={`w-6 h-6 rounded-sm flex items-center justify-center ${bgColorClass} dark:opacity-80`}>
+                      <span class="text-xs font-bold">{categoryInitials}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <div>
+                    <span class="text-xs font-medium text-gray-800 dark:text-gray-200">{categoryName}</span>
+                  </div>
+                  
+                  <a href={`/${post.slug}`} class="block mt-2">
+                    <h3 class="font-bold text-gray-800 dark:text-white text-base line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                      {post.title}
+                    </h3>
+                  </a>
+                  
+                  <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    <div class="flex items-center">
+                      <span class="mr-1">•</span>
+                      <span class="truncate max-w-[80px]">{post.author?.node?.name || 'Redacción'}</span>
+                    </div>
+                    <div class="flex items-center">
+                      <time datetime={post.date}>
+                        {new Date(post.date).toLocaleDateString('es-MX', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </time>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          
+          {posts.length > 4 && (
+            <div class="hidden md:flex items-center justify-center min-w-[280px] max-w-[320px] h-full">
+              <a href={`/${categorySlug}`} class="flex flex-col items-center justify-center text-primary hover:underline group p-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="font-medium">Ver más artículos</span>
+              </a>
+            </div>
+          )}
+          </div>
+        </div>
+        
+        <div class="absolute top-1/2 right-4 transform -translate-y-1/2 hidden md:block">
+          <button class="scroll-right-btn bg-white dark:bg-gray-800 rounded-full p-2 shadow-md hover:shadow-lg transition-shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    ) : (
+      <div class="flex items-center justify-center h-[200px] bg-gray-100 dark:bg-gray-800 rounded-xl mx-4">
+        <div class="text-center p-8">
+          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">No hay artículos disponibles</h3>
+          <p class="text-gray-600 dark:text-gray-300">No se encontraron artículos en esta categoría.</p>
+        </div>
+      </div>
+    )}
+  </div>
+</section>
+
+<script>
+  // Script para el botón de scroll horizontal
+  document.addEventListener('DOMContentLoaded', () => {
+    const scrollRightBtn = document.querySelector('.scroll-right-btn');
+    const scrollContainer = scrollRightBtn?.closest('.relative')?.querySelector('.scrollbar-hide');
+    
+    if (scrollRightBtn && scrollContainer) {
+      scrollRightBtn.addEventListener('click', () => {
+        scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
+      });
+    }
+  });
+</script>
+
+<style>
+  .storyline-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 280px;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Estilos para pantallas pequeñas */
+  @media (max-width: 640px) {
+    .storyline-card {
+      min-width: 100%;
+      min-height: 250px;
+    }
+  }
+  
+  /* Botón de scroll */
+  .scroll-right-btn {
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+  
+  .scroll-right-btn:hover {
+    opacity: 1;
+  }
+</style>

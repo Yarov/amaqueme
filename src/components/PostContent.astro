@@ -1,0 +1,63 @@
+---
+/**
+ * Componente para mostrar el contenido de un post individual
+ */
+
+interface Props {
+  post: {
+    title: string;
+    content: string;
+    date: string;
+    featuredImage?: {
+      node?: {
+        sourceUrl: string;
+        altText: string;
+      }
+    }
+  }
+}
+
+const { post } = Astro.props;
+
+// Obtener la imagen destacada o una por defecto
+const featuredImage = post.featuredImage?.node || {
+  sourceUrl: '',
+  altText: ''
+};
+
+// Formatear la fecha
+const formattedDate = new Date(post.date).toLocaleDateString('es-MX', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<div class="grid grid-cols-1 gap-8">
+  <article class="prose max-w-none">
+    <header class="mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-800 dark:text-gray-100">{post.title || 'Artículo'}</h1>
+      
+      <div class="flex items-center text-gray-500 dark:text-gray-400 mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <span>{formattedDate}</span>
+      </div>
+      
+      {featuredImage.sourceUrl && (
+        <div class="mb-6">
+          <img
+            src={featuredImage.sourceUrl}
+            alt={featuredImage.altText || post.title || 'Artículo'}
+            class="w-full rounded-lg"
+          />
+        </div>
+      )}
+    </header>
+    
+    <div class="content prose prose-lg max-w-none dark:prose-invert prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-primary dark:prose-a:text-primary-light hover:prose-a:text-primary-dark dark:hover:prose-a:text-primary-light/80 prose-img:rounded-lg prose-img:shadow-md">
+      <div set:html={post.content || 'Contenido no disponible'} />
+    </div>
+  </article>
+</div>

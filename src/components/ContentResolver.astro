@@ -1,0 +1,57 @@
+---
+/**
+ * Componente que detecta el tipo de contenido y renderiza el componente adecuado
+ */
+import PostContent from './PostContent.astro';
+import CategoryContent from './CategoryContent.astro';
+import PageContent from './PageContent.astro';
+
+interface Props {
+  content: {
+    type: string;
+    data: any;
+    meta: {
+      title: string;
+      posts?: any[];
+      featuredPosts?: any[];
+      regularPosts?: any[];
+      pagination?: {
+        prev: string | null;
+        next: string | null;
+        currentPage: number;
+        totalPages: number;
+      } | null;
+      featuredImage?: {
+        sourceUrl: string;
+        altText: string;
+      } | null;
+    }
+  }
+}
+
+const { content } = Astro.props;
+
+// Asegurarnos de que los datos estén disponibles y con valores por defecto
+const featuredPosts = content.meta.featuredPosts || [];
+const regularPosts = content.meta.regularPosts || [];
+const pagination = content.meta.pagination || null;
+---
+
+<div class="container mx-auto px-4 py-8 mt-16 md:mt-20">
+  {content.type === 'post' && (
+    <PostContent post={content.data} />
+  )}
+
+  {content.type === 'category' && (
+    <CategoryContent 
+      category={content.data}
+      featuredPosts={featuredPosts}
+      regularPosts={regularPosts}
+      pagination={pagination}
+    />
+  )}
+
+  {content.type === 'page' && (
+    <PageContent page={content.data} />
+  )}
+</div>

@@ -1,0 +1,255 @@
+---
+import { getPostImage } from '../utils/getPostImage';
+import { getReadingTime, formatReadingTime } from '../utils/readingTime';
+import ReadingTime from './ReadingTime.astro';
+
+interface Props {
+  title: string;
+  slug: string;
+  excerpt: string;
+  date: string;
+  content?: string;
+  featuredImage?: {
+    sourceUrl: string;
+    altText: string;
+  };
+  categories?: {
+    name: string;
+    slug: string;
+  }[];
+  layout?: 'default' | 'compact' | 'featured';
+}
+
+const { 
+  title, 
+  slug, 
+  excerpt, 
+  date, 
+  content = '', 
+  featuredImage, 
+  categories,
+  layout = 'default'
+} = Astro.props;
+
+// Obtener la mejor imagen para este post
+const postImage = getPostImage(
+  { 
+    title, 
+    featuredImage: { node: featuredImage }, 
+    content // Asegurarnos de que pasamos el contenido completo
+  },
+  '/placeholder-image.svg'
+);
+
+// Debug para verificar si está encontrando imágenes correctamente
+console.log(`PostCard for ${title}: Image URL = ${postImage.url}`);
+if (!featuredImage?.sourceUrl && content) {
+  console.log(`Using image from content for: ${title}`);
+}
+
+// Format date
+const formattedDate = new Date(date).toLocaleDateString('es-MX', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+// Calculate reading time
+const readingMinutes = Math.ceil((content?.split(/\s+/).length || 0) / 200);
+---
+
+{layout === 'default' && (
+  <article class="bg-white rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 duration-300 h-full flex flex-col">
+    <a href={`/${slug}`} class="block overflow-hidden aspect-video relative group">
+      <img 
+        src={postImage.url} 
+        alt={postImage.alt} 
+        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+      {categories && categories.length > 0 && (
+        <div class="absolute top-3 left-3">
+          <span 
+            class="inline-block bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
+          >
+            {categories[0].name}
+          </span>
+        </div>
+      )}
+    </a>
+    <div class="p-5 flex-grow flex flex-col">
+      <h2 class="text-lg font-bold mb-2 line-clamp-2">
+        <a href={`/${slug}`} class="text-gray-800 hover:text-primary transition-colors">
+          {title}
+        </a>
+      </h2>
+      <div class="text-xs text-gray-500 mb-3 flex items-center flex-wrap gap-x-4 gap-y-2">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>{new Date(date).toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })}</span>
+        </div>
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{readingMinutes} min</span>
+        </div>
+      </div>
+      <div class="text-gray-600 mb-4 text-sm line-clamp-3 flex-grow" set:html={excerpt} />
+      <a href={`/${slug}`} class="self-start text-sm inline-flex items-center text-primary font-medium group">
+        <span>Leer más</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+  </article>
+)}
+
+{layout === 'compact' && (
+  <article class="bg-white rounded-lg shadow-sm overflow-hidden flex transition-all hover:shadow-md hover:-translate-y-1 duration-300">
+    <a href={`/${slug}`} class="block w-1/3 overflow-hidden relative">
+      <img 
+        src={postImage.url} 
+        alt={postImage.alt} 
+        class="w-full h-full object-cover"
+      />
+    </a>
+    <div class="p-4 w-2/3">
+      {categories && categories.length > 0 && (
+        <a 
+          href={`/${categories[0].slug}`} 
+          class="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full inline-block mb-2"
+        >
+          {categories[0].name}
+        </a>
+      )}
+      <h2 class="text-base font-bold mb-1 line-clamp-2">
+        <a href={`/${slug}`} class="text-gray-800 hover:text-primary transition-colors">
+          {title}
+        </a>
+      </h2>
+      <div class="text-xs text-gray-500 mb-1 flex items-center gap-2">
+        <span>{new Date(date).toLocaleDateString('es-MX', {
+          month: 'short',
+          day: 'numeric',
+        })}</span>
+        <span>•</span>
+        <span>{readingMinutes} min</span>
+      </div>
+    </div>
+  </article>
+)}
+
+{layout === 'featured' && (
+  <article class="bg-white rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md duration-300 flex flex-col md:flex-row h-full">
+    <a href={`/${slug}`} class="block md:w-2/5 overflow-hidden relative group">
+      <img 
+        src={postImage.url} 
+        alt={postImage.alt} 
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6 md:hidden">
+        <span class="text-white font-medium">Leer artículo</span>
+      </div>
+    </a>
+    <div class="p-6 md:w-3/5 flex flex-col">
+      {categories && categories.length > 0 && (
+        <div class="flex flex-wrap gap-2 mb-3">
+          {categories.slice(0, 2).map((category) => (
+            <a 
+              href={`/categoria/${category.slug}`} 
+              class="text-xs font-medium bg-primary/10 text-primary px-3 py-1 rounded-full"
+            >
+              {category.name}
+            </a>
+          ))}
+        </div>
+      )}
+      <h2 class="text-xl font-bold mb-3">
+        <a href={`/${slug}`} class="text-gray-800 hover:text-primary transition-colors">
+          {title}
+        </a>
+      </h2>
+      <div class="text-sm text-gray-500 mb-4 flex items-center flex-wrap gap-x-4 gap-y-2">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>{formattedDate}</span>
+        </div>
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{readingMinutes} minutos de lectura</span>
+        </div>
+      </div>
+      <div class="text-gray-600 mb-4 line-clamp-3 flex-grow" set:html={excerpt} />
+      <a href={`/${slug}`} class="self-start inline-flex items-center text-primary font-medium group">
+        <span>Leer artículo completo</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+  </article>
+)}
+
+{!layout && (
+  <article class="bg-white rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 duration-300 h-full flex flex-col">
+    <a href={`/${slug}`} class="block overflow-hidden aspect-video relative group">
+      <img 
+        src={postImage.url} 
+        alt={postImage.alt} 
+        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+      {categories && categories.length > 0 && (
+        <div class="absolute top-3 left-3">
+          <span 
+            class="inline-block bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm"
+          >
+            {categories[0].name}
+          </span>
+        </div>
+      )}
+    </a>
+    <div class="p-5 flex-grow flex flex-col">
+      <h2 class="text-lg font-bold mb-2 line-clamp-2">
+        <a href={`/${slug}`} class="text-gray-800 hover:text-primary transition-colors">
+          {title}
+        </a>
+      </h2>
+      <div class="text-xs text-gray-500 mb-3 flex items-center flex-wrap gap-x-4 gap-y-2">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>{new Date(date).toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })}</span>
+        </div>
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{readingMinutes} min</span>
+        </div>
+      </div>
+      <div class="text-gray-600 mb-4 text-sm line-clamp-3 flex-grow" set:html={excerpt} />
+      <a href={`/${slug}`} class="self-start text-sm inline-flex items-center text-primary font-medium group">
+        <span>Leer más</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+  </article>
+)}

@@ -1,0 +1,88 @@
+---
+/**
+ * Componente para mostrar el contenido de una categoría con sus posts
+ */
+import PostCard from './PostCard.astro';
+import Pagination from './Pagination.astro';
+
+interface Props {
+  category: {
+    name: string;
+    slug: string;
+    description?: string;
+  };
+  featuredPosts: any[];
+  regularPosts: any[];
+  pagination: {
+    prev: string | null;
+    next: string | null;
+    currentPage: number;
+    totalPages: number;
+  } | null;
+}
+
+const { category, featuredPosts, regularPosts, pagination } = Astro.props;
+const allPosts = [...featuredPosts, ...regularPosts];
+---
+
+<div class="mb-10">
+  <h1 class="text-4xl md:text-5xl font-bold mb-3 text-gray-800 dark:text-gray-100">
+    Categoría: {category.name || 'Categoría'}
+  </h1>
+  {category.description && (
+    <div class="text-lg text-gray-600 dark:text-gray-300 mb-6" set:html={category.description} />
+  )}
+</div>
+
+{allPosts.length === 0 && (
+  <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 text-center mb-8">
+    <p class="text-xl mb-4">No hay artículos en esta categoría</p>
+    <p class="text-sm">Prueba con otra categoría o vuelve a la página principal</p>
+  </div>
+)}
+
+{allPosts.length > 0 && (
+  <>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      {featuredPosts.map((post) => (
+        <PostCard 
+          title={post.title}
+          slug={post.slug}
+          excerpt={post.excerpt}
+          date={post.date}
+          content={post.content}
+          featuredImage={post.featuredImage?.node}
+          categories={post.categories?.nodes}
+          layout="default"
+        />
+      ))}
+    </div>
+
+    {regularPosts.length > 0 && (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        {regularPosts.map((post) => (
+          <PostCard 
+            title={post.title}
+            slug={post.slug}
+            excerpt={post.excerpt}
+            date={post.date}
+            content={post.content}
+            featuredImage={post.featuredImage?.node}
+            categories={post.categories?.nodes}
+            layout="default"
+          />
+        ))}
+      </div>
+    )}
+  </>
+)}
+
+{pagination && pagination.totalPages > 1 && (
+  <div class="mt-12 mb-8">
+    <Pagination 
+      currentPage={pagination.currentPage || 1} 
+      totalPages={pagination.totalPages || 1} 
+      baseUrl={category.slug ? `/${category.slug}` : '/'} 
+    />
+  </div>
+)}

@@ -1,0 +1,129 @@
+---
+import { getMenuItems } from '../lib/wordpress.js';
+import { resolveUrlType } from '../lib/urlTypeResolver.js';
+
+// Definir interfaces para tipar correctamente
+interface MenuItem {
+  id: string;
+  label: string;
+  path: string;
+  parentId: string | null;
+  childItems?: {
+    nodes: MenuItem[];
+  };
+  originalPath?: string;
+  cleanedPath?: string;
+}
+
+// Obtener los elementos del menú desde WordPress
+const menuItems = await getMenuItems() as MenuItem[];
+
+// Función para limpiar y validar URLs
+const cleanUrl = async (url, label) => {
+  if (!url) return '/';
+  
+  // Eliminar dominio de WordPress si existe
+  let cleanedUrl = url.replace(/^https?:\/\/[^\/]+/, '');
+  
+  // Asegurarse de que la URL comienza con /
+  if (!cleanedUrl.startsWith('/')) {
+    cleanedUrl = '/' + cleanedUrl;
+  }
+  
+  // Eliminar dobles barras
+  cleanedUrl = cleanedUrl.replace(/\/\//g, '/');
+  
+  // Eliminar trailing slash excepto para la raíz
+  if (cleanedUrl !== '/' && cleanedUrl.endsWith('/')) {
+    cleanedUrl = cleanedUrl.slice(0, -1);
+  }
+  
+  // Extraer el slug base (sin la parte de /page/X)
+  const baseSlug = cleanedUrl.replace(/^\//, '').split('/')[0];
+  
+  // Verificar el tipo de contenido usando el nuevo resolvedor
+  try {
+    // Solo verificar si no es la página principal
+    if (baseSlug) {
+      const contentInfo = await resolveUrlType(baseSlug);
+      console.log(`[Menu] Item '${label}' (${baseSlug}): Tipo=${contentInfo.type}`);
+    }
+  } catch (error) {
+    console.error(`[Menu] Error verificando tipo para '${label}' (${baseSlug}):`, error);
+  }
+  
+  return cleanedUrl;
+};
+
+// Procesar los elementos del menú para depuración (versión async)
+const processMenuItems = async (): Promise<MenuItem[]> => {
+  const processed: MenuItem[] = [];
+  
+  for (const item of menuItems) {
+    const cleanedPath = await cleanUrl(item.path, item.label);
+    
+    // Procesar los elementos hijos
+    const childNodes: MenuItem[] = [];
+    if (item.childItems?.nodes && item.childItems.nodes.length > 0) {
+      for (const child of item.childItems.nodes) {
+        const childCleanedPath = await cleanUrl(child.path, child.label);
+        childNodes.push({
+          ...child,
+          originalPath: child.path,
+          cleanedPath: childCleanedPath
+        });
+      }
+    }
+    
+    const processedItem: MenuItem = {
+      ...item,
+      originalPath: item.path,
+      cleanedPath,
+      childItems: {
+        nodes: childNodes
+      }
+    };
+    
+    processed.push(processedItem);
+  }
+  
+  return processed;
+};
+
+// Procesar los elementos del menú
+const processedMenuItems = await processMenuItems();
+
+// Usar los elementos procesados
+console.log('[Menu] Items procesados:', processedMenuItems.length);
+---
+
+<nav class="hidden md:flex items-center space-x-6">
+  <ul class="flex space-x-4">
+    {processedMenuItems.map((item) => {
+      const hasSubmenu = item.childItems?.nodes?.length > 0;
+      return (
+        <li class="relative group">
+          <a href={item.cleanedPath || '#'} class="block px-3 py-2 text-sm font-medium hover:text-primary transition-colors duration-200">
+            {item.label}
+            {hasSubmenu && (
+              <svg class="inline ml-1 w-4 h-4 transform group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            )}
+          </a>
+          {hasSubmenu && (
+            <ul class="absolute left-0 w-48 mt-2 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              {item.childItems?.nodes?.map((child) => (
+                <li class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <a href={child.cleanedPath || '#'} class="block text-sm font-medium">
+                    {child.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      );
+    })}
+  </ul>
+</nav>

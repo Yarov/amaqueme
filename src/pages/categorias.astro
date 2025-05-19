@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SEO from '../components/seo/SEO.astro';
+import { getAllCategories } from '../lib/wordpress';
+
+const categories = await getAllCategories();
+---
+
+<Layout title="Categorías - Amaqueme">
+  <SEO 
+    title="Categorías - Amaqueme"
+    description="Explora nuestros artículos por categoría y encuentra contenido relacionado con tus temas favoritos."
+    type="website"
+  />
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-6">Categorías</h1>
+    <p class="text-gray-600">Explora nuestros artículos por categoría.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {categories.map((category) => (
+      <a 
+        href={`/${category.slug}`}
+        class="block bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+      >
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold text-gray-800">{category.name}</h2>
+          <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+            {category.count} {category.count === 1 ? 'artículo' : 'artículos'}
+          </span>
+        </div>
+      </a>
+    ))}
+  </div>
+</Layout>

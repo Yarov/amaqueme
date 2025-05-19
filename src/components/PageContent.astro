@@ -1,0 +1,36 @@
+---
+/**
+ * Componente para mostrar el contenido de una página estática
+ */
+
+interface Props {
+  page: {
+    title: string;
+    content: string;
+    featuredImage?: {
+      node?: {
+        sourceUrl: string;
+        altText: string;
+      }
+    }
+  }
+}
+
+const { page } = Astro.props;
+---
+
+<article class="prose max-w-none">
+  <header>
+    <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-800 dark:text-gray-100">{page.title || 'Página'}</h1>
+    {page.featuredImage?.node?.sourceUrl && (
+      <img
+        src={page.featuredImage.node.sourceUrl}
+        alt={page.featuredImage.node.altText || page.title || 'Página'}
+        class="w-full rounded-lg mb-6"
+      />
+    )}
+  </header>
+  <div class="content prose prose-lg max-w-none dark:prose-invert prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-primary dark:prose-a:text-primary-light hover:prose-a:text-primary-dark dark:hover:prose-a:text-primary-light/80 prose-img:rounded-lg prose-img:shadow-md">
+    <div set:html={page.content || 'Contenido no disponible'} />
+  </div>
+</article>

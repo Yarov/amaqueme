@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#f1f5f9"/>
+  <rect x="300" y="250" width="200" height="100" rx="8" fill="#0aa43e" />
+  <path d="M350 300 L380 270 L410 300 L450 260" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="430" cy="280" r="15" fill="white"/>
+  <text x="400" y="350" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle">Amaqueme</text>
+</svg>

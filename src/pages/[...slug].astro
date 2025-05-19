@@ -1,0 +1,29 @@
+---
+/**
+ * Página dinámica que maneja todos los slugs del sitio
+ * Detecta automáticamente si es un post, una categoría o una página estática
+ */
+import Layout from '../layouts/Layout.astro';
+import ContentResolver from '../components/ContentResolver.astro';
+import { useContentResolver } from '../hooks/useContentResolver';
+
+// Obtener el slug de la URL
+const { slug } = Astro.params;
+
+// Obtener el parámetro de página de la URL
+const page = parseInt(Astro.url.searchParams.get('page') || '1');
+
+// Usar el hook para resolver el contenido con el parámetro de página
+const resolvedContent = await useContentResolver(slug || '', page);
+
+console.log(`[...slug].astro: Resolviendo contenido para slug '${slug}', página ${page}`);
+
+
+// Obtener el título para la página
+const pageTitle = resolvedContent.meta.title;
+
+---
+
+<Layout title={pageTitle}>
+  <ContentResolver content={resolvedContent} />
+</Layout>

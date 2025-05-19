@@ -1,0 +1,9 @@
+{
+  "name": "amaqueme",
+  "version": "0.1.0",
+  "description": "Proyecto base para amaqueme",
+  "main": "src/index.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}

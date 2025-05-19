@@ -1,0 +1,106 @@
+---
+/**
+ * Componente SEO específico para artículos
+ */
+import SEO from './SEO.astro';
+import { getReadingTime } from '../../utils/readingTime';
+import { getPostImage } from '../../utils/getPostImage';
+
+export interface Props {
+  post: {
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    date: string;
+    path: string;
+    featuredImage?: {
+      node?: {
+        sourceUrl: string;
+        altText: string;
+      }
+    };
+    categories?: {
+      nodes?: {
+        name: string;
+        slug: string;
+      }[]
+    };
+    author?: {
+      name: string;
+    };
+  };
+}
+
+const { post } = Astro.props;
+
+// Obtener datos necesarios para SEO
+const postImage = getPostImage(post);
+const imageUrl = postImage.url;
+const url = new URL(post.path, Astro.site || Astro.url.origin).href;
+
+// Calcular tiempo de lectura
+const readingTimeMinutes = getReadingTime(post.content);
+
+// Formatear la fecha
+const datePublished = new Date(post.date).toISOString();
+
+// Crear una descripción limpia (sin HTML) basada en el excerpt
+const description = post.excerpt 
+  ? post.excerpt.replace(/<\/?[^>]+(>|$)/g, '').trim() 
+  : `Artículo de ${post.title} en el blog de Amaqueme`;
+
+// Categorías
+const categories = post.categories?.nodes?.map(cat => cat.name) || [];
+const tags = categories;
+
+// Autor
+const author = post.author?.name || 'Amaqueme';
+---
+
+<SEO
+  title={post.title}
+  description={description}
+  image={imageUrl}
+  url={url}
+  type="article"
+  publishDate={datePublished}
+  author={author}
+/>
+
+<!-- Metadatos adicionales para artículos -->
+<meta property="article:section" content={categories.length > 0 ? categories[0] : 'Blog'} />
+{categories.map(category => (
+  <meta property="article:tag" content={category} />
+))}
+
+<!-- Structured Data específico para artículo/blogpost -->
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": url
+  },
+  "headline": post.title,
+  "description": description,
+  "image": imageUrl,
+  "wordCount": post.content ? post.content.split(/\s+/).length : 0,
+  "timeRequired": `PT${readingTimeMinutes}M`,
+  "datePublished": datePublished,
+  "dateModified": datePublished,
+  "author": {
+    "@type": "Person",
+    "name": author
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Amaqueme",
+    "logo": {
+      "@type": "ImageObject",
+      "url": new URL("/favicon.svg", Astro.site || Astro.url.origin).href
+    }
+  },
+  "keywords": tags.join(", ")
+})}>
+</script>

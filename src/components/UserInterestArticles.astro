@@ -1,0 +1,125 @@
+---
+// Componente para mostrar artículos basados en el interés del usuario
+// Utiliza el historial de categorías visitadas para mostrar contenido relevante
+import { getMostVisitedCategories } from '../utils/userPreferences';
+import CategoryStorylines from './CategoryStorylines.astro';
+
+interface Props {
+  title?: string;
+  subtitle?: string;
+  fallbackCategory?: string;
+  maxCategories?: number;
+}
+
+const { 
+  title = "Artículos que te pueden interesar", 
+  subtitle = "Basado en tus categorías más visitadas",
+  fallbackCategory = "laberinto",
+  maxCategories = 1
+} = Astro.props;
+
+// Este código se ejecuta solo en el cliente mediante un script
+---
+
+<div class="user-interests-section py-8 w-full">
+  <div class="max-w-7xl mx-auto px-4 md:px-8">
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-gray-800 dark:text-white">{title}</h2>
+      <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">{subtitle}</p>
+    </div>
+  </div>
+  
+  <div id="user-interest-categories">
+    <!-- Contenido cargado dinámicamente con JavaScript -->
+    <div class="loading-placeholder px-4 md:px-8 max-w-7xl mx-auto">
+      <div class="animate-pulse bg-gray-200 dark:bg-gray-700 h-[300px] rounded-lg"></div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ fallbackCategory, maxCategories }}>
+  import { getMostVisitedCategories } from '../utils/userPreferences';
+  
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Obtener las categorías más visitadas
+    const categories = getMostVisitedCategories(maxCategories);
+    const container = document.getElementById('user-interest-categories');
+    
+    if (!container) return;
+    
+    // Si no hay categorías visitadas, usar la categoría por defecto
+    const categoryToShow = categories.length > 0 ? categories[0] : fallbackCategory;
+    
+    try {
+      // Cargar los posts de la categoría seleccionada
+      const response = await fetch(`/api/category-content?slug=${categoryToShow}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.posts && data.posts.length > 0) {
+          // Eliminar el placeholder de carga
+          container.innerHTML = '';
+          
+          // Crear un elemento para contener el componente CategoryStorylines
+          const categorySection = document.createElement('div');
+          container.appendChild(categorySection);
+          
+          // Cargar el componente CategoryStorylines de forma dinámica
+          const categoryComponent = document.createElement('astro-island');
+          categoryComponent.setAttribute('component-url', '/src/components/CategoryStorylines.astro');
+          categoryComponent.setAttribute('component-export', 'default');
+          categoryComponent.setAttribute('renderer-url', '/src/renderers/renderer.js');
+          categoryComponent.setAttribute('props', JSON.stringify({
+            categorySlug: data.slug,
+            categoryTitle: 'Artículos recomendados para ti',
+            maxPosts: 4
+          }));
+          
+          categorySection.appendChild(categoryComponent);
+          
+          // Como alternativa, podemos simplemente redirigir a la página de la categoría
+          // window.location.href = `/${categoryToShow}`;
+        } else {
+          throw new Error('No se encontraron artículos para esta categoría');
+        }
+      } else {
+        throw new Error('Error al cargar el contenido de la categoría');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      // En caso de error, mostrar un mensaje o intentar cargar la categoría por defecto
+      if (categoryToShow !== fallbackCategory) {
+        try {
+          const fallbackResponse = await fetch(`/api/category-content?slug=${fallbackCategory}`);
+          if (fallbackResponse.ok) {
+            const data = await fallbackResponse.json();
+            if (data.success) {
+              // Redirigir a la página de la categoría por defecto
+              window.location.href = `/${fallbackCategory}`;
+            }
+          }
+        } catch (e) {
+          console.error('Error al cargar categoría por defecto:', e);
+          container.innerHTML = `
+            <div class="max-w-7xl mx-auto px-4 md:px-8">
+              <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg text-red-800 dark:text-red-200">
+                <p>No se pudieron cargar los artículos recomendados.</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+  });
+</script>
+
+<style>
+  .loading-placeholder {
+    animation: fadeInOut 1.5s infinite alternate;
+  }
+  
+  @keyframes fadeInOut {
+    from { opacity: 0.5; }
+    to { opacity: 0.8; }
+  }
+</style>
