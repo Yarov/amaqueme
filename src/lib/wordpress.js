@@ -1,6 +1,6 @@
 import { request, gql } from 'graphql-request';
 
-const WORDPRESS_API_URL = 'https://amaqueme.mx/graphql';
+const WORDPRESS_API_URL = 'https://amaqueme.mx/api/graphql';
 
 // Configuración de los headers para las solicitudes a la API
 const requestHeaders = {
@@ -31,7 +31,7 @@ export async function getCategories() {
 
 export async function getAllPosts(page = 1, postsPerPage = 12) {
   console.log(`Obteniendo todos los posts, página: ${page}, posts por página: ${postsPerPage}`);
-  
+
   // Consulta para obtener posts (limitado a 100)
   const query = gql`
     query GetAllPosts {
@@ -67,12 +67,12 @@ export async function getAllPosts(page = 1, postsPerPage = 12) {
   try {
     // Realizar la consulta para obtener los posts
     const result = await request(
-      WORDPRESS_API_URL, 
-      query, 
-      null, 
+      WORDPRESS_API_URL,
+      query,
+      null,
       requestHeaders
     );
-    
+
     // Verificar si tenemos resultados
     if (!result.posts || !result.posts.nodes) {
       console.error('No se encontraron posts');
@@ -89,23 +89,23 @@ export async function getAllPosts(page = 1, postsPerPage = 12) {
         }
       };
     }
-    
+
     // Obtener los posts
     const allPosts = result.posts.nodes || [];
-    
+
     // Obtener el conteo total de posts
     const totalPosts = allPosts.length;
-    
+
     // Calcular el total de páginas
     const totalPages = Math.ceil(totalPosts / postsPerPage);
-    
+
     console.log(`Total de posts: ${totalPosts}, Total de páginas: ${totalPages}, Página actual: ${page}`);
-    
+
     // Obtener los posts para la página actual
     const startIndex = (page - 1) * postsPerPage;
     const endIndex = startIndex + postsPerPage;
     const posts = allPosts.slice(startIndex, endIndex);
-    
+
     return {
       posts,
       pagination: {
@@ -137,7 +137,7 @@ export async function getAllPosts(page = 1, postsPerPage = 12) {
 
 export async function getPostsByCategory(categorySlug, page = 1, postsPerPage = 12) {
   console.log(`Obteniendo posts para la categoría: ${categorySlug}, página: ${page}, posts por página: ${postsPerPage}`);
-  
+
   if (!categorySlug) {
     console.error('getPostsByCategory: categorySlug es requerido');
     return {
@@ -153,10 +153,10 @@ export async function getPostsByCategory(categorySlug, page = 1, postsPerPage = 
       }
     };
   }
-  
+
   // Calcular cuántos posts necesitamos obtener para la página actual
   const postsToFetch = page * postsPerPage;
-  
+
   // Consulta para obtener posts de una categoría usando paginación basada en cursores
   const query = gql`
     query GetPostsByCategory($categoryName: String!, $first: Int!) {
@@ -201,12 +201,12 @@ export async function getPostsByCategory(categorySlug, page = 1, postsPerPage = 
   try {
     // Realizar la consulta para obtener los posts de la categoría para la página actual
     const result = await request(
-      WORDPRESS_API_URL, 
-      query, 
-      { categoryName: categorySlug, first: postsToFetch }, 
+      WORDPRESS_API_URL,
+      query,
+      { categoryName: categorySlug, first: postsToFetch },
       requestHeaders
     );
-    
+
     // Verificar si tenemos resultados
     if (!result.posts || !result.posts.nodes) {
       console.error(`No se encontraron posts para la categoría ${categorySlug}`);
@@ -223,17 +223,17 @@ export async function getPostsByCategory(categorySlug, page = 1, postsPerPage = 
         }
       };
     }
-    
+
     // Obtener los posts de la categoría
     const allPosts = result.posts.nodes || [];
-    
+
     // Obtener información de paginación de la API
     const hasNextPage = result.posts.pageInfo?.hasNextPage || false;
     const endCursor = result.posts.pageInfo?.endCursor || null;
-    
+
     // Obtener el conteo total de posts de la categoría
     let totalPosts = allPosts.length; // Por defecto, usamos lo que tenemos
-    
+
     // Intentar obtener el conteo real de la categoría
     if (result.categories && result.categories.nodes && result.categories.nodes.length > 0) {
       const categoryInfo = result.categories.nodes[0];
@@ -242,10 +242,10 @@ export async function getPostsByCategory(categorySlug, page = 1, postsPerPage = 
         console.log(`Conteo real de posts para la categoría ${categorySlug}: ${totalPosts}`);
       }
     }
-    
+
     // Calcular el total de páginas
     const totalPages = Math.ceil(totalPosts / postsPerPage);
-    
+
     // Obtener los posts para la página actual
     // Si estamos en la página 1, tomamos los primeros postsPerPage posts
     // Si estamos en otra página, tomamos los últimos postsPerPage posts
@@ -256,15 +256,15 @@ export async function getPostsByCategory(categorySlug, page = 1, postsPerPage = 
       // Tomamos los últimos postsPerPage posts (que corresponden a la página actual)
       posts = allPosts.slice(-postsPerPage);
     }
-    
+
     console.log(`Categoría ${categorySlug}: Total de posts: ${totalPosts}, Total de páginas: ${totalPages}, Página actual: ${page}, HasNextPage: ${hasNextPage}`);
-    
+
     // Si estamos intentando acceder a una página que está más allá de los posts que tenemos
     // pero sabemos que hay más posts (por el conteo de la categoría)
     if (posts.length === 0 && page > 1 && (page - 1) * postsPerPage < totalPosts) {
       console.warn(`Intentando acceder a la página ${page} pero solo tenemos ${allPosts.length} posts cargados. Hay ${totalPosts} posts en total en la categoría.`);
     }
-    
+
     return {
       posts,
       pagination: {
@@ -296,12 +296,12 @@ export async function getPostsByCategory(categorySlug, page = 1, postsPerPage = 
 
 export async function getPostBySlug(slug) {
   console.log(`Obteniendo post con slug: ${slug}`);
-  
+
   if (!slug) {
     console.error('getPostBySlug: slug es requerido');
     return null;
   }
-  
+
   const query = gql`
     query GetPostBySlug($slug: ID!) {
       post(id: $slug, idType: SLUG) {
@@ -330,11 +330,11 @@ export async function getPostBySlug(slug) {
 
   try {
     const result = await request(WORDPRESS_API_URL, query, { slug }, requestHeaders);
-    
+
     if (result?.post) {
       return result.post;
     }
-    
+
     console.log(`No se encontró ningún post con slug: ${slug}`);
     return null;
   } catch (error) {
@@ -415,7 +415,7 @@ export async function getFeaturedPostsWithImages() {
 }
 
 export async function getMenuItems() {
-  
+
   const query = gql`
     query MenuQuery {
       menu(id: "dGVybToy") {
@@ -453,16 +453,16 @@ export async function getMenuItems() {
 
     // Crear un mapa para acceder rápidamente a los items por su ID
     const itemsById = new Map(nodes.map(item => [item.id, item]));
-    
+
     // Normalizar las URLs para que sean compatibles con nuestra estructura
     const normalizeUrl = (item) => {
       // Si no hay información del nodo conectado, usar la ruta original
       if (!item.connectedNode?.node) {
         return item.path || '/';
       }
-      
+
       const node = item.connectedNode.node;
-      
+
       // Detectar el tipo de nodo y formatear la URL adecuadamente
       if (node.isPostsPage) {
         // Si es la página de posts, usar la ruta raíz
@@ -471,7 +471,7 @@ export async function getMenuItems() {
         // Si tiene slug, usarlo directamente
         return `/${node.slug}`;
       }
-      
+
       // Si todo lo demás falla, usar la ruta original
       return item.path || '/';
     };
