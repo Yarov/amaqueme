@@ -1,4 +1,5 @@
 import { request, gql } from 'graphql-request';
+import { resolveUrlType } from './urlTypeResolver';
 
 const WORDPRESS_API_URL = 'https://amaqueme.mx/api/graphql';
 
@@ -368,7 +369,6 @@ export async function getAllCategories() {
 
 export async function getContentBySlug(slug) {
   console.log(`[getContentBySlug] Esta función está obsoleta. Usando urlTypeResolver...`);
-  const { resolveUrlType } = await import('./urlTypeResolver');
   return await resolveUrlType(slug);
 }
 
