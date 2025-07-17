@@ -5,5 +5,6 @@ import tailwind from '@astrojs/tailwind';
 export default defineConfig({
   site: 'https://amaqueme.mx/api/',
   integrations: [tailwind()],
-  output: 'server' // Cambiar a servidor para rutas dinámicas
+  output: 'static',
+  adapter: vercel(),
 });
