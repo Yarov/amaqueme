@@ -21,6 +21,21 @@ const { title, description = "Amaqueme", noFooter = false } = Astro.props;
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <title>{title}</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZV1GHW33SN"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-ZV1GHW33SN');
+    </script>
+    <script async src="https://www.googleoptimize.com/optimize.js?id=OPT-NLZW5JG"></script>
+    
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8763186523641960"
+     crossorigin="anonymous"></script>
     <script is:inline>
       // Script inlined para evitar parpadeo al cargar la página
       // Siempre usar modo claro por defecto, a menos que el usuario haya elegido explícitamente el modo oscuro
@@ -110,6 +125,8 @@ const { title, description = "Amaqueme", noFooter = false } = Astro.props;
               <p>&copy; {new Date().getFullYear()} Amaqueme. Todos los derechos reservados.</p>
             </div>
           </div>
+          
+
         </div>
       </footer>
     )}

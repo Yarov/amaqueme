@@ -1,0 +1,22 @@
+---
+// AdUnit.astro - Componente para mostrar anuncios de Google AdSense
+// Puede ser incluido en cualquier página o artículo donde se desee mostrar un anuncio
+---
+
+<!-- Articulo de post -->
+<div class="ad-container my-6">
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-8763186523641960"
+       data-ad-slot="4385851818"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+</div>
+
+<script is:inline>
+  // Esperar a que el DOM esté completamente cargado
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar los anuncios
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  });
+</script>

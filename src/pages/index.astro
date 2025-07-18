@@ -4,6 +4,7 @@ import CategoryList from "../components/CategoryList.astro";
 import MinimalFeatured from "../components/MinimalFeatured.astro";
 import CategoryStorylines from "../components/CategoryStorylines.astro";
 import SEO from "../components/seo/SEO.astro";
+import PromoBanner from "../components/PromoBanner.astro";
 import { getAllPosts } from "../lib/wordpress";
 import { getPostImage } from '../utils/getPostImage';
 
@@ -224,6 +225,9 @@ const recentPosts = posts.slice(0, 6); // Get first 6 posts for recent posts sec
 <div class="storylines-wrapper">
   <CategoryStorylines categorySlug="laberinto" categoryTitle="Laberinto" maxPosts={6} />
 </div>
+
+<!-- Banner Promocional -->
+<PromoBanner />
 
 <!-- Footer -->
 <footer class="bg-gray-100 dark:bg-zinc-900 text-gray-600 dark:text-gray-300 p-6 mt-auto transition-colors">
