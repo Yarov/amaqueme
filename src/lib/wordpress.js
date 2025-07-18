@@ -1,7 +1,7 @@
 import { request, gql } from 'graphql-request';
 import { resolveUrlType } from './urlTypeResolver';
 
-const WORDPRESS_API_URL = 'https://amaqueme.mx/api/graphql';
+const WORDPRESS_API_URL = 'https://api.amaqueme.mx/graphql';
 
 // Configuración de los headers para las solicitudes a la API
 const requestHeaders = {
