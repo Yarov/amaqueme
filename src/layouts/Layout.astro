@@ -23,12 +23,18 @@ const { title, description = "Amaqueme", noFooter = false } = Astro.props;
     <title>{title}</title>
     <script is:inline>
       // Script inlined para evitar parpadeo al cargar la página
-      const isDarkMode = 
-        localStorage.getItem('darkMode') === 'true' || 
-        (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      // Siempre usar modo claro por defecto, a menos que el usuario haya elegido explícitamente el modo oscuro
+      const isDarkMode = localStorage.getItem('darkMode') === 'true';
       
       if (isDarkMode) {
         document.documentElement.classList.add('dark');
+      } else {
+        // Asegurarse de que el modo claro esté activo
+        document.documentElement.classList.remove('dark');
+        // Si no hay preferencia guardada, establecer explícitamente el modo claro
+        if (!localStorage.getItem('darkMode')) {
+          localStorage.setItem('darkMode', 'false');
+        }
       }
     </script>
   </head>
@@ -37,15 +43,17 @@ const { title, description = "Amaqueme", noFooter = false } = Astro.props;
       <div class="container mx-auto px-4 py-3 flex justify-between items-center max-w-4xl">
         <a href="/" class="text-xl md:text-2xl font-serif font-semibold hover:opacity-90 transition-opacity duration-200">Amaqueme</a>
 
-        <!-- Desktop Navigation -->
-        <Menu />
-        <DarkModeToggle class="ml-4" />
-        </nav>
-
-        <!-- Mobile menu button -->
-        <div class="md:hidden flex items-center space-x-2">
+        <div class="flex items-center space-x-4">
+          <!-- Desktop Navigation (hidden on mobile) -->
+          <div class="hidden md:block">
+            <Menu />
+          </div>
+          
+          <!-- Dark Mode Toggle (visible on all screen sizes) -->
           <DarkModeToggle />
-          <button id="mobile-menu-button" class="flex items-center">
+          
+          <!-- Mobile menu button (only visible on mobile) -->
+          <button id="mobile-menu-button" class="md:hidden flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>

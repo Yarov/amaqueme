@@ -7,17 +7,16 @@
 
 // Función para configurar el modo oscuro en todo el sitio
 export function setupDarkMode() {
-  // Comprobar si debe estar en modo oscuro basado en:
-  // 1. Preferencia guardada en localStorage
-  // 2. Preferencia del sistema si no hay configuración guardada
-  const isDarkMode = 
-    localStorage.getItem('darkMode') === 'true' || 
-    (
-      !localStorage.getItem('darkMode') && 
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-    );
+  // Comprobar si debe estar en modo oscuro basado únicamente en la preferencia guardada
+  // Siempre usar modo claro por defecto
+  const isDarkMode = localStorage.getItem('darkMode') === 'true';
   
-  // Aplicar el modo oscuro si es necesario
+  // Si no hay preferencia guardada, establecer explícitamente el modo claro
+  if (!localStorage.getItem('darkMode')) {
+    localStorage.setItem('darkMode', 'false');
+  }
+  
+  // Aplicar el modo oscuro si es necesario, o asegurar el modo claro
   if (isDarkMode) {
     document.documentElement.classList.add('dark');
     document.getElementById('dark-mode-toggle')?.setAttribute('aria-checked', 'true');
@@ -26,19 +25,9 @@ export function setupDarkMode() {
     document.getElementById('dark-mode-toggle')?.setAttribute('aria-checked', 'false');
   }
   
-  // Escuchar cambios en la preferencia del sistema
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-    if (!localStorage.getItem('darkMode')) {
-      // Solo cambiar automáticamente si el usuario no ha establecido una preferencia
-      if (event.matches) {
-        document.documentElement.classList.add('dark');
-        document.getElementById('dark-mode-toggle')?.setAttribute('aria-checked', 'true');
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.getElementById('dark-mode-toggle')?.setAttribute('aria-checked', 'false');
-      }
-    }
-  });
+  // Ya no escuchamos cambios en la preferencia del sistema
+  // El modo siempre será el que el usuario haya seleccionado explícitamente
+  // o claro por defecto
 }
 
 // Función para cambiar entre modos claro y oscuro
