@@ -1,19 +1,15 @@
 ---
 /**
- * Componente optimizado para mostrar resúmenes generados por IA
- * Características:
- * - Carga dinámica de la librería Marked
- * - Manejo robusto de errores
- * - UI responsiva con estados de carga
- * - Accesibilidad mejorada
+ * Componente para mostrar resumen generado por IA
  */
 interface Props {
   title: string;
   slug: string;
-  postId?: string | number;
+  postId?: string;
+  content?: string; // Contenido completo del artículo para la IA
 }
 
-const { title, slug, postId } = Astro.props;
+const { title, slug, postId, content } = Astro.props;
 
 // Generar IDs únicos para evitar conflictos
 const componentId = `ai-summary-${Math.random().toString(36).substr(2, 9)}`;
@@ -28,9 +24,9 @@ const summaryModalId = `${componentId}-modal`;
     id={buttonId}
     data-slug={slug}
     data-post-id={postId}
-    data-title={title}
-    class="group flex items-center gap-2 bg-primary/10 hover:bg-primary/20 dark:bg-primary-light/10 dark:hover:bg-primary-light/20 text-primary dark:text-primary-light px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-    aria-label={`Ver resumen IA del artículo: ${title}`}
+    data-content={content}
+    class="group inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+    aria-label={`Generar resumen con IA del artículo: ${title}`}
     type="button"
   >
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -115,7 +111,7 @@ const summaryModalId = `${componentId}-modal`;
     
     // Configuración
     const CONFIG = {
-      API_ENDPOINT: 'https://n8n.linker.mx/webhook/sumary',
+      API_ENDPOINT: 'https://n8n.linker.mx/webhook-test/sumary',
       MARKED_CDN: 'https://cdn.jsdelivr.net/npm/marked@9.1.6/+esm',
       RETRY_ATTEMPTS: 2,
       TIMEOUT: 30000
@@ -198,7 +194,7 @@ const summaryModalId = `${componentId}-modal`;
     }
     
     // Obtener resumen de la API
-    async function fetchSummary(postId, slug) {
+    async function fetchSummary(postId, slug, content) {
       try {
         const data = await fetchWithRetry(CONFIG.API_ENDPOINT, {
           method: 'POST',
@@ -207,7 +203,7 @@ const summaryModalId = `${componentId}-modal`;
           },
           body: JSON.stringify({
             id: postId || '',
-            note: slug || ''
+            note: content || '' // Enviar contenido completo, fallback a slug si no hay contenido
           })
         });
         
@@ -335,9 +331,10 @@ const summaryModalId = `${componentId}-modal`;
       isLoading = true;
       elements.button.disabled = true;
       
-      // Obtener datos del botón para tracking
+      // Obtener datos del botón para tracking y API
       const slug = elements.button.dataset.slug || '';
       const postId = elements.button.dataset.postId || '';
+      const content = elements.button.dataset.content || '';
       
       // Enviar evento de inicio de generación de resumen
       trackAISummaryUsage('summary_requested', postId, slug);
@@ -346,8 +343,8 @@ const summaryModalId = `${componentId}-modal`;
         // Mostrar modal de carga
         showModal(elements.loadingModal);
         
-        // Fetch del resumen
-        const summaryData = await fetchSummary(postId, slug);
+        // Fetch del resumen con contenido completo
+        const summaryData = await fetchSummary(postId, slug, content);
         
         // Enviar evento de éxito
         trackAISummaryUsage('summary_generated', postId, slug);
