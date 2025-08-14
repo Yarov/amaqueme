@@ -1,0 +1,415 @@
+---
+/**
+ * Componente optimizado para mostrar resúmenes generados por IA
+ * Características:
+ * - Carga dinámica de la librería Marked
+ * - Manejo robusto de errores
+ * - UI responsiva con estados de carga
+ * - Accesibilidad mejorada
+ */
+interface Props {
+  title: string;
+  slug: string;
+  postId?: string | number;
+}
+
+const { title, slug, postId } = Astro.props;
+
+// Generar IDs únicos para evitar conflictos
+const componentId = `ai-summary-${Math.random().toString(36).substr(2, 9)}`;
+const buttonId = `${componentId}-btn`;
+const loadingModalId = `${componentId}-loading`;
+const summaryModalId = `${componentId}-modal`;
+---
+
+<div class="ai-summary-container">
+  <!-- Botón para abrir el modal -->
+  <button
+    id={buttonId}
+    data-slug={slug}
+    data-post-id={postId}
+    data-title={title}
+    class="group flex items-center gap-2 bg-primary/10 hover:bg-primary/20 dark:bg-primary-light/10 dark:hover:bg-primary-light/20 text-primary dark:text-primary-light px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+    aria-label={`Ver resumen IA del artículo: ${title}`}
+    type="button"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+    <span class="transition-opacity group-disabled:opacity-50">Resumen IA</span>
+  </button>
+
+  <!-- Modal de carga optimizado -->
+  <div id={loadingModalId} class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="loading-title">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+    <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-sm w-full p-8 text-center transform transition-all">
+        <div class="mb-6" aria-hidden="true">
+          <svg class="animate-spin h-12 w-12 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+        <h3 id="loading-title" class="text-lg font-bold text-gray-800 dark:text-white mb-2">Generando resumen</h3>
+        <p class="text-gray-600 dark:text-gray-300 text-sm">La IA está analizando el artículo para crear un resumen personalizado...</p>
+        <div class="sr-only" aria-live="polite">Cargando resumen del artículo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de resumen optimizado -->
+  <div id={summaryModalId} class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="summary-title">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="ai-modal-backdrop"></div>
+    <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
+        <!-- Cabecera del modal -->
+        <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <h3 class="text-lg font-bold">Resumen IA</h3>
+          </div>
+          <button id="ai-modal-close" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Contenido del modal -->
+        <div class="p-6">
+          <h4 id="summary-title" class="text-xl font-bold mb-6 text-gray-800 dark:text-white">{title}</h4>
+          
+          <div class="mb-6">
+            <h5 class="text-sm uppercase font-semibold text-gray-500 dark:text-gray-400 mb-3">Resumen</h5>
+            <div id="summary-content" class="prose prose-sm max-w-none dark:prose-invert text-gray-700 dark:text-gray-300 leading-relaxed" aria-live="polite">
+              <p class="text-gray-500 dark:text-gray-400 italic">Cargando resumen...</p>
+            </div>
+          </div>
+          
+          <div class="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Este resumen fue generado automáticamente por IA y puede no capturar todos los matices del artículo original.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Footer del modal -->
+        <div class="border-t border-gray-200 dark:border-gray-700 p-4 flex justify-end">
+          <button
+            id="ai-modal-read-article"
+            class="text-primary hover:text-primary-dark dark:hover:text-primary-light font-medium text-sm"
+          >
+            Leer artículo completo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ buttonId, loadingModalId, summaryModalId }}>
+  (() => {
+    'use strict';
+    
+    // Configuración
+    const CONFIG = {
+      API_ENDPOINT: 'https://n8n.linker.mx/webhook/sumary',
+      MARKED_CDN: 'https://cdn.jsdelivr.net/npm/marked@9.1.6/+esm',
+      RETRY_ATTEMPTS: 2,
+      TIMEOUT: 30000
+    };
+    
+    // Estado del componente
+    let isLoading = false;
+    let markedLib = null;
+    
+    // Elementos del DOM con IDs únicos
+    const elements = {
+      button: document.getElementById(buttonId),
+      loadingModal: document.getElementById(loadingModalId),
+      summaryModal: document.getElementById(summaryModalId),
+      summaryContent: document.getElementById('summary-content'),
+      modalClose: document.getElementById('ai-modal-close'),
+      modalBackdrop: document.getElementById('ai-modal-backdrop'),
+      modalReadArticle: document.getElementById('ai-modal-read-article')
+    };
+    
+    // Validar elementos críticos
+    if (!elements.button || !elements.loadingModal || !elements.summaryModal || !elements.summaryContent) {
+      console.warn('AISummary: Elementos críticos no encontrados');
+      return;
+    }
+    
+    // Cargar librería Marked de forma lazy
+    async function loadMarked() {
+      if (markedLib) return markedLib;
+      
+      try {
+        const module = await import(CONFIG.MARKED_CDN);
+        markedLib = module.marked;
+        
+        // Configurar marked
+        markedLib.setOptions({
+          breaks: true,
+          gfm: true,
+          sanitize: false,
+          smartLists: true,
+          smartypants: true
+        });
+        
+        return markedLib;
+      } catch (error) {
+        console.error('Error cargando Marked:', error);
+        return null;
+      }
+    }
+    
+    // Función optimizada para fetch con timeout y reintentos
+    async function fetchWithRetry(url, options, attempts = CONFIG.RETRY_ATTEMPTS) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        
+        if (attempts > 1 && error.name !== 'AbortError') {
+          console.warn(`Reintentando... (${CONFIG.RETRY_ATTEMPTS - attempts + 1}/${CONFIG.RETRY_ATTEMPTS})`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return fetchWithRetry(url, options, attempts - 1);
+        }
+        
+        throw error;
+      }
+    }
+    
+    // Obtener resumen de la API
+    async function fetchSummary(postId, slug) {
+      try {
+        const data = await fetchWithRetry(CONFIG.API_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: postId || '',
+            note: slug || ''
+          })
+        });
+        
+        return data;
+      } catch (error) {
+        console.error('Error obteniendo resumen:', error);
+        throw new Error('No se pudo obtener el resumen del servidor');
+      }
+    }
+    
+    // Convertir markdown a HTML
+    async function parseMarkdownToHTML(markdown) {
+      if (!markdown) return '<p>No hay contenido disponible.</p>';
+      
+      // Limpiar bloques de código
+      const cleanMarkdown = markdown
+        .replace(/```html\s*/gi, '')
+        .replace(/```\s*$/gi, '')
+        .trim();
+      
+      try {
+        const marked = await loadMarked();
+        if (marked) {
+          return marked(cleanMarkdown);
+        }
+      } catch (error) {
+        console.error('Error procesando markdown:', error);
+      }
+      
+      // Fallback simple
+      return `<p>${cleanMarkdown.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+    }
+    
+    // Actualizar UI con el resumen
+    async function updateSummaryUI(data) {
+      if (!data?.resumen) {
+        elements.summaryContent.innerHTML = '<p class="text-red-600 dark:text-red-400">No se pudo generar un resumen para este artículo.</p>';
+        return;
+      }
+      
+      try {
+        const htmlContent = await parseMarkdownToHTML(data.resumen);
+        elements.summaryContent.innerHTML = htmlContent;
+      } catch (error) {
+        console.error('Error actualizando UI:', error);
+        elements.summaryContent.innerHTML = '<p class="text-red-600 dark:text-red-400">Error procesando el resumen.</p>';
+      }
+    }
+    
+    // Gestión de modales
+    function showModal(modal) {
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      
+      // Focus trap para accesibilidad
+      const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      }
+    }
+    
+    function hideModal(modal) {
+      modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      
+      // Devolver focus al botón
+      if (elements.button) {
+        elements.button.focus();
+      }
+    }
+    
+    function hideAllModals() {
+      // Enviar evento de cierre si el modal de resumen estaba abierto
+      if (!elements.summaryModal.classList.contains('hidden')) {
+        const slug = elements.button.dataset.slug || '';
+        const postId = elements.button.dataset.postId || '';
+        trackAISummaryUsage('summary_closed', postId, slug);
+      }
+      
+      hideModal(elements.loadingModal);
+      hideModal(elements.summaryModal);
+    }
+    
+    // Función para enviar evento a Google Analytics
+    function trackAISummaryUsage(action, postId, slug) {
+      try {
+        // Google Analytics 4 (gtag)
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'ai_summary_usage', {
+            event_category: 'AI Features',
+            event_label: action,
+            custom_parameter_1: postId || 'unknown',
+            custom_parameter_2: slug || 'unknown',
+            value: 1
+          });
+        }
+        
+        // Google Analytics Universal (ga) - fallback
+        if (typeof ga !== 'undefined') {
+          ga('send', 'event', 'AI Features', action, slug || 'unknown', 1);
+        }
+        
+        // Google Tag Manager (dataLayer) - alternativa
+        if (typeof dataLayer !== 'undefined') {
+          dataLayer.push({
+            event: 'ai_summary_usage',
+            event_category: 'AI Features',
+            event_action: action,
+            event_label: slug || 'unknown',
+            post_id: postId || 'unknown',
+            custom_timestamp: new Date().toISOString()
+          });
+        }
+        
+        console.log('AI Summary tracking sent:', { action, postId, slug });
+      } catch (error) {
+        console.warn('Error sending AI summary tracking:', error);
+      }
+    }
+    
+    // Función principal para abrir modal
+    async function openModal() {
+      if (isLoading) return;
+      
+      isLoading = true;
+      elements.button.disabled = true;
+      
+      // Obtener datos del botón para tracking
+      const slug = elements.button.dataset.slug || '';
+      const postId = elements.button.dataset.postId || '';
+      
+      // Enviar evento de inicio de generación de resumen
+      trackAISummaryUsage('summary_requested', postId, slug);
+      
+      try {
+        // Mostrar modal de carga
+        showModal(elements.loadingModal);
+        
+        // Fetch del resumen
+        const summaryData = await fetchSummary(postId, slug);
+        
+        // Enviar evento de éxito
+        trackAISummaryUsage('summary_generated', postId, slug);
+        
+        // Ocultar loading y mostrar resumen
+        hideModal(elements.loadingModal);
+        await updateSummaryUI(summaryData);
+        showModal(elements.summaryModal);
+        
+        // Enviar evento de visualización del modal
+        trackAISummaryUsage('summary_viewed', postId, slug);
+        
+      } catch (error) {
+        console.error('Error en openModal:', error);
+        
+        // Enviar evento de error
+        trackAISummaryUsage('summary_error', postId, slug);
+        
+        hideModal(elements.loadingModal);
+        elements.summaryContent.innerHTML = `<p class="text-red-600 dark:text-red-400">${error.message}</p>`;
+        showModal(elements.summaryModal);
+        
+      } finally {
+        isLoading = false;
+        elements.button.disabled = false;
+      }
+    }
+    
+    // Event listeners optimizados
+    function setupEventListeners() {
+      // Botón principal
+      elements.button.addEventListener('click', openModal);
+      
+      // Cerrar modal
+      const closeElements = [elements.modalClose, elements.modalBackdrop, elements.modalReadArticle].filter(Boolean);
+      closeElements.forEach(element => {
+        element.addEventListener('click', hideAllModals);
+      });
+      
+      // Tecla Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && (!elements.summaryModal.classList.contains('hidden') || !elements.loadingModal.classList.contains('hidden'))) {
+          hideAllModals();
+        }
+      });
+      
+      // Cleanup al descargar la página
+      window.addEventListener('beforeunload', hideAllModals);
+    }
+    
+    // Inicializar componente
+    function init() {
+      setupEventListeners();
+      console.log('AISummary component initialized');
+    }
+    
+    // Auto-inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+  })();
+</script>

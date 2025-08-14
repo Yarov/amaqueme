@@ -3,12 +3,15 @@
  * Componente para mostrar el contenido de un post individual
  */
 import AdUnit from './AdUnit.astro';
+import AISummary from './AISummary.astro';
+import ShareWhatsApp from './ShareWhatsApp.astro';
 
 interface Props {
   post: {
     title: string;
     content: string;
     date: string;
+    slug?: string;
     featuredImage?: {
       node?: {
         sourceUrl: string;
@@ -26,18 +29,25 @@ const featuredImage = post.featuredImage?.node || {
   altText: ''
 };
 
-// Formatear la fecha
-const formattedDate = new Date(post.date).toLocaleDateString('es-MX', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+const formattedDate = formatDate(post.date);
+
 ---
 
 <div class="grid grid-cols-1 gap-8">
   <article class="prose max-w-none">
     <header class="mb-8">
-      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-800 dark:text-gray-100">{post.title || 'Artículo'}</h1>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100">{post.title || 'Artículo'}</h1>
+        <div class="flex-shrink-0 flex flex-col sm:flex-row gap-3">
+          <AISummary title={post.title || 'Artículo'} slug={post.slug || ''} postId={post.id || post.databaseId || ''} />
+          <ShareWhatsApp title={post.title || 'Artículo'} url={Astro.url.href} />
+        </div>
+      </div>
       
       <div class="flex items-center text-gray-500 dark:text-gray-400 mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
