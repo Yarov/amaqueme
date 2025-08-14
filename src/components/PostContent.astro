@@ -12,6 +12,8 @@ interface Props {
     content: string;
     date: string;
     slug?: string;
+    id?: string | number;
+    databaseId?: string | number;
     featuredImage?: {
       node?: {
         sourceUrl: string;
@@ -44,7 +46,7 @@ const formattedDate = formatDate(post.date);
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
         <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100">{post.title || 'Artículo'}</h1>
         <div class="flex-shrink-0 flex flex-col sm:flex-row gap-3">
-          <AISummary title={post.title || 'Artículo'} slug={post.slug || ''} postId={post.id || post.databaseId || ''} />
+          <AISummary title={post.title || 'Artículo'} slug={post.slug || ''} postId={String(post.id || post.databaseId || '')} content={post.content || ''} />
           <ShareWhatsApp title={post.title || 'Artículo'} url={Astro.url.href} />
         </div>
       </div>
