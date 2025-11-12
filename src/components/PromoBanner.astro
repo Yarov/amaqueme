@@ -2,18 +2,23 @@
 /**
  * Componente de banner promocional para la página de inicio
  */
+import { getBanner } from "../lib/wordpress.js";
+
+const banner = await getBanner();
+const link = banner?.bannerFields?.url || "";
+const bannerImageUrl = banner?.bannerFields?.image?.node?.sourceUrl || "";
 ---
 
 <div class="container mx-auto my-8">
   <div class="flex justify-center">
     <a
-      href="https://congresoedomex.gob.mx/?src=Ama"
+      href={link}
       target="_blank"
       rel="noopener noreferrer"
       class="block hover:opacity-90 transition-opacity"
     >
       <img
-        src="https://api.amaqueme.mx/banners/banner2.gif"
+        src={bannerImageUrl}
         alt="Banner promocional"
         class="max-w-full h-auto rounded shadow-md"
       />

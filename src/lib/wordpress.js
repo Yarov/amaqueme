@@ -414,6 +414,33 @@ export async function getFeaturedPostsWithImages() {
   }
 }
 
+export async function getBanner() {
+  const query = gql`
+    query GetBanner {
+      banner(id: "cG9zdDo5MDc4NA==") {
+        id
+        bannerFields {
+          url
+          image {
+            node {
+              sourceUrl
+            }
+          }
+          url
+        }
+      }
+    }
+  `;
+
+  try {
+    const result = await request(WORDPRESS_API_URL, query, null, requestHeaders);
+    return result.banner;
+  } catch (error) {
+    console.error('Error fetching banner:', error);
+    return null;
+  }
+}
+
 export async function getMenuItems() {
 
   const query = gql`
