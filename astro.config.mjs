@@ -1,17 +1,18 @@
 import { defineConfig } from 'astro/config';
-import vercel from '@astrojs/vercel/serverless';
+import node from '@astrojs/node';
 import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
   output: 'server',
-  adapter: vercel({
-    analytics: true,
-    devImageService: 'sharp',
-    imagesConfig: {
-      sizes: [640, 750, 828, 1080, 1200, 1920],
-      formats: ['image/avif', 'image/webp'],
-      minimumCacheTTL: 60,
-    },
+  adapter: node({
+    mode: 'standalone', // Importante para que funcione como servidor independiente
   }),
+  // Las configuraciones de imagen van en la raíz de defineConfig
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+    },
+    domains: [], // Agrega dominios externos si los usas
+  },
   integrations: [tailwind()],
 });
