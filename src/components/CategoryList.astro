@@ -7,50 +7,57 @@ const sortedCategories = [...categories].sort((a, b) => b.count - a.count);
 // Tomar solo las 6 categorías más populares
 const topCategories = sortedCategories.slice(0, 6);
 
-// Definir colores para cada categoría
-const categoryColors = {
-  default: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  primary: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary',
-  success: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  warning: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-  danger: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  info: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-};
+// Category colors configuration
+const categoryColors = [
+  { bg: 'bg-blue-50 dark:bg-blue-900/10', hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/20', icon: 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200', text: 'text-blue-600 dark:text-blue-300', arrow: 'text-blue-400 dark:text-blue-500' },
+  { bg: 'bg-green-50 dark:bg-green-900/10', hover: 'hover:bg-green-100 dark:hover:bg-green-900/20', icon: 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200', text: 'text-green-600 dark:text-green-300', arrow: 'text-green-400 dark:text-green-500' },
+  { bg: 'bg-emerald-50 dark:bg-emerald-900/10', hover: 'hover:bg-emerald-100 dark:hover:bg-emerald-900/20', icon: 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-200', text: 'text-emerald-600 dark:text-emerald-300', arrow: 'text-emerald-400 dark:text-emerald-500' },
+  { bg: 'bg-orange-50 dark:bg-orange-900/10', hover: 'hover:bg-orange-100 dark:hover:bg-orange-900/20', icon: 'bg-orange-100 dark:bg-orange-800 text-orange-600 dark:text-orange-200', text: 'text-orange-600 dark:text-orange-300', arrow: 'text-orange-400 dark:text-orange-500' },
+  { bg: 'bg-red-50 dark:bg-red-900/10', hover: 'hover:bg-red-100 dark:hover:bg-red-900/20', icon: 'bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-200', text: 'text-red-600 dark:text-red-300', arrow: 'text-red-400 dark:text-red-500' },
+  { bg: 'bg-indigo-50 dark:bg-indigo-900/10', hover: 'hover:bg-indigo-100 dark:hover:bg-indigo-900/20', icon: 'bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-200', text: 'text-indigo-600 dark:text-indigo-300', arrow: 'text-indigo-400 dark:text-indigo-500' },
+];
 
-// Función para asignar colores de manera cíclica
-const getCategoryColor = (index) => {
-  const colors = Object.values(categoryColors);
-  return colors[index % colors.length];
+// Función para obtener el icono basado en el nombre de la categoría
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('seguridad') || n.includes('inseguridad') || n.includes('polic')) return 'local_police';
+  if (n.includes('gobierno') || n.includes('municipal')) return 'account_balance';
+  if (n.includes('homicidio') || n.includes('crimen')) return 'warning';
+  if (n.includes('estado') || n.includes('méxico')) return 'map';
+  if (n.includes('ciudad') || n.includes('chalco') || n.includes('amecameca') || n.includes('toluca')) return 'location_city';
+  if (n.includes('educación') || n.includes('escuela')) return 'school';
+  if (n.includes('salud') || n.includes('hospital')) return 'health_and_safety';
+  if (n.includes('deporte') || n.includes('futbol')) return 'sports_soccer';
+  if (n.includes('cultura') || n.includes('arte')) return 'palette';
+  if (n.includes('tecnología') || n.includes('tech')) return 'devices';
+  return 'location_on';
 };
 ---
 
 <div class="topics-section">
   {topCategories.length > 0 ? (
-    <div class="space-y-4">
-      {topCategories.map((category, index) => (
-        <a
-          href={`/${category.slug}`}
-          class={`block p-4 rounded-xl ${getCategoryColor(index)} hover:opacity-90 transition-all group`}
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-lg bg-white/50 dark:bg-black/20 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                  <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-                </svg>
+    <div class="flex flex-col gap-4">
+      {topCategories.map((category, index) => {
+        const colors = categoryColors[index % categoryColors.length];
+        const icon = getCategoryIcon(category.name);
+        return (
+          <a
+            href={`/${category.slug}`}
+            class={`group ${colors.bg} rounded-xl p-4 lg:p-5 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}
+          >
+            <div class="flex items-center gap-4">
+              <div class={`size-10 rounded-lg ${colors.icon} flex items-center justify-center`}>
+                <span class="material-symbols-outlined">{icon}</span>
               </div>
               <div>
-                <h3 class="font-semibold">{category.name}</h3>
-                <p class="text-sm opacity-75">{category.count} artículos</p>
+                <h4 class="font-bold text-slate-900 dark:text-white">{category.name}</h4>
+                <p class={`text-xs ${colors.text} font-medium`}>{category.count} artículos</p>
               </div>
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50 group-hover:opacity-100 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-            </svg>
-          </div>
-        </a>
-      ))}
+            <span class={`material-symbols-outlined ${colors.arrow} text-[18px] group-hover:translate-x-1 transition-transform`}>chevron_right</span>
+          </a>
+        );
+      })}
     </div>
   ) : (
     <div class="text-gray-500 dark:text-gray-400 italic text-center py-4">

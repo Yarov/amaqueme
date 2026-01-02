@@ -1,10 +1,12 @@
 ---
 /**
  * Componente para mostrar el contenido de un post individual
+ * Diseño moderno basado en referencia visual
  */
-import AdUnit from './AdUnit.astro';
-import AISummary from './AISummary.astro';
 import ShareWhatsApp from './ShareWhatsApp.astro';
+import { getAllPosts } from '../lib/wordpress';
+import { getPostImage } from '../utils/getPostImage';
+import { getReadingTime } from '../utils/readingTime';
 
 interface Props {
   post: {
@@ -14,6 +16,28 @@ interface Props {
     slug?: string;
     id?: string | number;
     databaseId?: string | number;
+    excerpt?: string;
+    categories?: {
+      nodes: Array<{
+        name: string;
+        slug: string;
+      }>;
+    };
+    tags?: {
+      nodes: Array<{
+        name: string;
+        slug: string;
+      }>;
+    };
+    author?: {
+      node?: {
+        name: string;
+        avatar?: {
+          url: string;
+        };
+        description?: string;
+      };
+    };
     featuredImage?: {
       node?: {
         sourceUrl: string;
@@ -25,57 +49,232 @@ interface Props {
 
 const { post } = Astro.props;
 
-// Obtener la imagen destacada o una por defecto
-const featuredImage = post.featuredImage?.node || {
-  sourceUrl: '',
-  altText: ''
-};
+// Obtener posts relacionados para "También te podría interesar"
+const { posts } = await getAllPosts();
+const relatedPosts = posts.slice(0, 3);
 
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
-}
+// Para la sección "Más leídas" - usamos los posts más recientes por ahora
+// TODO: Implementar Query de posts más vistos desde WordPress
+const mostReadPosts = posts.slice(0, 4);
 
-const formattedDate = formatDate(post.date);
+// Obtener la imagen destacada
+const featuredImage = getPostImage(post);
 
+// Formatear fecha
+const formattedDate = new Date(post.date).toLocaleDateString('es-MX', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+const shortDate = new Date(post.date).toLocaleDateString('es-MX', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+
+// Calcular tiempo de lectura
+const readingTime = getReadingTime(post.content);
+
+// Obtener categorías y tags
+const categories = post.categories?.nodes || [];
+const tags = post.tags?.nodes || [];
+const allTags = [...categories, ...tags].slice(0, 4);
+
+// Autor
+const author = post.author?.node || { name: 'Redacción', description: 'Editor' };
+
+// Breadcrumbs
+const mainCategory = categories[0];
 ---
 
-<div class="grid grid-cols-1 gap-8">
-  <article class="prose max-w-none">
-    <header class="mb-8">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100">{post.title || 'Artículo'}</h1>
-        <div class="flex-shrink-0 flex flex-col sm:flex-row gap-3">
-          <!-- <AISummary title={post.title || 'Artículo'} slug={post.slug || ''} postId={String(post.id || post.databaseId || '')} content={post.content || ''} /> -->
-          <ShareWhatsApp title={post.title || 'Artículo'} url={Astro.url.href} />
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 sm:space-y-12">
+  <!-- Breadcrumb -->
+  <nav class="flex text-sm text-text-muted overflow-x-auto whitespace-nowrap pb-2 items-center">
+    <a href="/" class="hover:text-primary transition-colors">Inicio</a>
+    {mainCategory && (
+      <>
+        <span class="material-symbols-outlined text-[16px] mx-2 text-gray-400">chevron_right</span>
+        <a href={`/${mainCategory.slug}`} class="hover:text-primary transition-colors">{mainCategory.name}</a>
+      </>
+    )}
+    <span class="material-symbols-outlined text-[16px] mx-2 text-gray-400">chevron_right</span>
+    <span class="text-slate-900 dark:text-white font-medium">{categories[0]?.name || 'Artículo'}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+    <!-- Main Article -->
+    <article class="lg:col-span-8">
+      <header class="mb-8">
+        <!-- Categories/Tags -->
+        {categories.length > 0 && (
+          <div class="flex gap-2 mb-4 flex-wrap">
+            {categories.slice(0, 2).map((cat) => (
+              <a href={`/${cat.slug}`} class="inline-block px-3 py-1 text-xs font-bold text-primary bg-green-50 dark:bg-green-900/20 rounded-full uppercase tracking-wider hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                {cat.name}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <!-- Title -->
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
+          {post.title}
+        </h1>
+
+        <!-- Meta Info (solo fecha, tiempo de lectura y botones de compartir) -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-5 border-y border-gray-100 dark:border-gray-800">
+          <div class="flex flex-wrap items-center gap-4 text-sm text-text-muted">
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+              <span>{shortDate}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">schedule</span>
+              <span>{readingTime}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            <ShareWhatsApp title={post.title} url={Astro.url.href} />
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div class="flex items-center text-gray-500 dark:text-gray-400 mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span>{formattedDate}</span>
-      </div>
-
-      {featuredImage.sourceUrl && (
-        <div class="mb-6">
+      <!-- Featured Image -->
+      {featuredImage.url && (
+        <figure class="mb-10 relative group rounded-2xl overflow-hidden shadow-soft">
           <img
-            src={featuredImage.sourceUrl}
-            alt={featuredImage.altText || post.title || 'Artículo'}
-            class="w-full rounded-lg"
+            src={featuredImage.url}
+            alt={featuredImage.alt}
+            class="w-full h-auto object-cover aspect-video bg-gray-200"
           />
+          {featuredImage.alt && (
+            <figcaption class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 text-white text-sm">
+              {featuredImage.alt}
+            </figcaption>
+          )}
+        </figure>
+      )}
+
+      <!-- Article Content -->
+      <div class="article-content max-w-none prose prose-lg dark:prose-invert">
+        {post.excerpt && (
+          <p class="font-medium text-xl md:text-2xl text-slate-900 dark:text-white mb-8 leading-relaxed !mb-10">
+            {post.excerpt.replace(/<[^>]*>/g, '')}
+          </p>
+        )}
+        <div set:html={post.content} />
+      </div>
+
+      <!-- Tags/Related Topics -->
+      {allTags.length > 0 && (
+        <div class="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800">
+          <h4 class="text-sm font-bold text-slate-500 uppercase mb-4">Temas relacionados</h4>
+          <div class="flex flex-wrap gap-2">
+            {allTags.map((tag) => (
+              <a
+                href={`/${tag.slug}`}
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg text-sm text-slate-700 dark:text-gray-300 font-medium transition-colors"
+              >
+                {tag.name}
+              </a>
+            ))}
+          </div>
         </div>
       )}
-    </header>
+    </article>
 
-    <div class="content prose prose-lg max-w-none dark:prose-invert prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-a:text-primary dark:prose-a:text-primary-light hover:prose-a:text-primary-dark dark:hover:prose-a:text-primary-light/80 prose-img:rounded-lg prose-img:shadow-md">
-      <div set:html={post.content || 'Contenido no disponible'} />
-    </div>
+    <!-- Sidebar -->
+    <aside class="lg:col-span-4 space-y-10 lg:sticky lg:top-24 lg:self-start">
+      <!-- Más Leídas -->
+      <div class="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-card border border-gray-100 dark:border-gray-800">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+          <span class="w-1 h-6 bg-primary rounded-full"></span>
+          Más leídas
+        </h3>
+        <div class="flex flex-col gap-6">
+          {mostReadPosts.map((p, index) => (
+            <a href={`/${p.slug}`} class="group flex gap-4 items-start">
+              <span class="text-3xl font-bold text-gray-200 dark:text-gray-700 group-hover:text-primary transition-colors">
+                {index + 1}
+              </span>
+              <div>
+                {p.categories?.nodes?.[0] && (
+                  <span class="text-[10px] font-bold text-primary uppercase mb-1 block">
+                    {p.categories.nodes[0].name}
+                  </span>
+                )}
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-3">
+                  {p.title}
+                </h4>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
 
-    <!-- Anuncio al final del artículo -->
-    <div class="mt-10 border-t pt-8 border-gray-200 dark:border-gray-700">
-      <AdUnit />
-    </div>
-  </article>
+      <!-- Banner de Publicidad -->
+      <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Publicidad</span>
+        <p class="text-gray-500 font-medium">Espacio reservado para anunciantes</p>
+      </div>
+
+      <!-- Explorar Temas -->
+      {categories.length > 0 && (
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Explorar temas</h3>
+          <div class="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <a
+                href={`/${cat.slug}`}
+                class="px-3 py-1.5 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-slate-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                {cat.name}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </aside>
+  </div>
+
+  <!-- También te podría interesar -->
+  {relatedPosts.length > 0 && (
+    <section class="border-t border-gray-200 dark:border-gray-800 pt-12">
+      <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-8">
+        También te podría interesar
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {relatedPosts.map((relatedPost) => {
+          const relatedImage = getPostImage(relatedPost);
+          const relatedCategory = relatedPost.categories?.nodes?.[0];
+          return (
+            <article class="flex flex-col gap-4 group cursor-pointer">
+              <a href={`/${relatedPost.slug}`} class="aspect-[16/9] rounded-2xl overflow-hidden bg-gray-200 relative">
+                <div
+                  class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                  style={`background-image: url('${relatedImage.url}');`}
+                ></div>
+                {relatedCategory && (
+                  <span class="absolute top-3 left-3 bg-white/90 backdrop-blur text-slate-900 text-[10px] font-bold px-2 py-1 rounded uppercase">
+                    {relatedCategory.name}
+                  </span>
+                )}
+              </a>
+              <div class="flex flex-col flex-1">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white leading-snug mb-2 group-hover:text-primary transition-colors">
+                  <a href={`/${relatedPost.slug}`}>{relatedPost.title}</a>
+                </h3>
+                <p class="text-sm text-text-muted line-clamp-2 mb-3" set:html={relatedPost.excerpt} />
+                <div class="mt-auto text-xs font-medium text-text-muted">
+                  {new Date(relatedPost.date).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })} • {getReadingTime(relatedPost.content)}
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  )}
 </div>

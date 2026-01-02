@@ -1,245 +1,207 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import CategoryList from "../components/CategoryList.astro";
-import MinimalFeatured from "../components/MinimalFeatured.astro";
 import CategoryStorylines from "../components/CategoryStorylines.astro";
 import SEO from "../components/seo/SEO.astro";
 import PromoBanner from "../components/PromoBanner.astro";
-import { getAllPosts } from "../lib/wordpress";
+import { getAllPosts, getAllCategories } from "../lib/wordpress";
 import { getPostImage } from '../utils/getPostImage';
 
 const { posts } = await getAllPosts();
-const featuredPosts = posts.slice(0, 4); // Get first 4 posts for featured section
-const recentPosts = posts.slice(0, 6); // Get first 6 posts for recent posts section
+const categories = await getAllCategories();
+const featuredPost = posts[0]; // First post for hero
+const sidebarPosts = posts.slice(1, 5); // Posts 2-5 for sidebar (4 posts)
+const recentPosts = posts.slice(5, 8); // Posts 6-8 for recent articles (3 posts different from featured)
+
+// Top categories sorted by count
+const topCategories = [...categories]
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 6);
+
+// Category colors map
+const categoryColors = [
+  { bg: 'bg-blue-50 dark:bg-blue-900/10', hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/20', icon: 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200', text: 'text-blue-600 dark:text-blue-300', arrow: 'text-blue-400 dark:text-blue-500' },
+  { bg: 'bg-green-50 dark:bg-green-900/10', hover: 'hover:bg-green-100 dark:hover:bg-green-900/20', icon: 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200', text: 'text-green-600 dark:text-green-300', arrow: 'text-green-400 dark:text-green-500' },
+  { bg: 'bg-emerald-50 dark:bg-emerald-900/10', hover: 'hover:bg-emerald-100 dark:hover:bg-emerald-900/20', icon: 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-200', text: 'text-emerald-600 dark:text-emerald-300', arrow: 'text-emerald-400 dark:text-emerald-500' },
+  { bg: 'bg-orange-50 dark:bg-orange-900/10', hover: 'hover:bg-orange-100 dark:hover:bg-orange-900/20', icon: 'bg-orange-100 dark:bg-orange-800 text-orange-600 dark:text-orange-200', text: 'text-orange-600 dark:text-orange-300', arrow: 'text-orange-400 dark:text-orange-500' },
+  { bg: 'bg-red-50 dark:bg-red-900/10', hover: 'hover:bg-red-100 dark:hover:bg-red-900/20', icon: 'bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-200', text: 'text-red-600 dark:text-red-300', arrow: 'text-red-400 dark:text-red-500' },
+  { bg: 'bg-indigo-50 dark:bg-indigo-900/10', hover: 'hover:bg-indigo-100 dark:hover:bg-indigo-900/20', icon: 'bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-200', text: 'text-indigo-600 dark:text-indigo-300', arrow: 'text-indigo-400 dark:text-indigo-500' },
+];
+
+// Category icons map
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('seguridad') || n.includes('inseguridad') || n.includes('polic')) return 'local_police';
+  if (n.includes('gobierno') || n.includes('municipal')) return 'account_balance';
+  if (n.includes('homicidio') || n.includes('crimen')) return 'warning';
+  if (n.includes('estado') || n.includes('méxico')) return 'map';
+  if (n.includes('ciudad') || n.includes('chalco') || n.includes('amecameca')) return 'location_city';
+  return 'location_on';
+};
 ---
 
-<Layout title="Amaqueme - Inicio" noFooter={true}>
+<Layout title="Amaqueme - Inicio">
   <SEO
     title="Amaqueme - Blog minimalista con WordPress y Astro"
     description="Descubre contenido interesante en nuestro blog minimalista creado con Astro.js y WordPress GraphQL."
     type="website"
   />
 
-  <!-- Hero Section with Minimal Featured Posts -->
-  <section class="py-10 md:py-14 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl mx-4 my-6">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Notas más destacadas</h2>
-        <a href="/noticias" class="text-primary hover:underline flex items-center text-sm font-medium group">
-          <span>Ver todas</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-          </svg>
-        </a>
-      </div>
-      <MinimalFeatured />
+  <!-- Featured Section / Destacadas -->
+  <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div class="flex items-center justify-between mb-4 sm:mb-6">
+      <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Destacadas</h2>
+      <a href="/noticias" class="text-primary hover:text-primary-dark font-medium text-sm flex items-center gap-1 transition-colors">
+        Ver todas <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+      </a>
     </div>
-  </section>
 
-  <div class="container mx-auto px-4">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Main Content -->
-      <div class="lg:col-span-2">
-        <!-- Featured Posts with modern card design -->
-        {
-          featuredPosts.length > 0 && (
-            <section class="mb-16">
-              <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white border-b-2 border-primary pb-2 inline-block">
-                  Artículos destacados
-                </h2>
-                <a href="/noticias" class="text-primary hover:underline flex items-center text-sm font-medium group">
-                  <span>Ver más</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </a>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Main Featured Post -->
+      <div class="lg:col-span-8">
+        {featuredPost && (
+          <a href={`/${featuredPost.slug}`} class="block relative w-full aspect-[4/5] sm:aspect-video lg:h-[600px] rounded-2xl overflow-hidden shadow-soft group cursor-pointer">
+            <div
+              class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+              style={`background-image: url('${getPostImage(featuredPost).url}');`}
+            ></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+            <div class="absolute bottom-0 left-0 p-5 sm:p-10 w-full max-w-4xl">
+              {featuredPost.categories?.nodes?.[0] && (
+                <span class="inline-block px-3 py-1 mb-3 sm:mb-4 text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider bg-primary rounded-md shadow-sm">
+                  {featuredPost.categories.nodes[0].name}
+                </span>
+              )}
+              <h2 class="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 leading-snug sm:leading-tight">
+                {featuredPost.title}
+              </h2>
+              <div class="flex items-center gap-3 text-gray-300 text-xs sm:text-sm font-medium">
+                <span>{featuredPost.author?.node?.name || 'Redacción'}</span>
+                <span class="size-1 rounded-full bg-gray-400"></span>
+                <span>{new Date(featuredPost.date).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })}</span>
               </div>
-
-              <div class="space-y-8">
-                {featuredPosts.slice(0, 6).map((post, index) => (
-                  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border-l-4 border-primary group">
-                    <div class="md:flex">
-                      <div class="md:w-1/3 h-56 md:h-64 relative overflow-hidden">
-                        <img
-                          src={getPostImage(post).url}
-                          alt={getPostImage(post).alt}
-                          class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
-                          loading="lazy"
-                        />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        {post.categories?.nodes && post.categories.nodes.length > 0 && (
-                          <div class="absolute top-4 left-4 flex flex-wrap gap-2">
-                            {post.categories.nodes.slice(0, 2).map((category) => (
-                              <a
-                                href={`/${category.slug}`}
-                                class="text-xs font-medium bg-white/10 backdrop-blur-sm text-white px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors"
-                              >
-                                {category.name}
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div class="p-6 md:w-2/3 flex flex-col justify-between">
-                        <div>
-                          <h3 class="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
-                            <a href={`/${post.slug}`} class="hover:underline decoration-primary/50 decoration-2 underline-offset-4">
-                              {post.title}
-                            </a>
-                          </h3>
-                          <p class="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-4" set:html={post.excerpt} />
-                        </div>
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-                          <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <time datetime={post.date}>
-                              {new Date(post.date).toLocaleDateString('es-ES', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </time>
-                          </div>
-                          <a href={`/${post.slug}`} class="text-sm text-primary font-medium hover:underline inline-flex items-center group">
-                            <span>Leer artículo</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )
-        }
-
-        <!-- Recent Posts Grid -->
-        {
-          recentPosts.length > 0 && (
-            <section class="mb-16">
-              <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white border-b-2 border-primary pb-2 inline-block">
-                  Artículos recientes
-                </h2>
-                <a href="/noticias" class="text-primary hover:underline flex items-center text-sm font-medium group">
-                  <span>Ver más</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                  </svg>
-                </a>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {recentPosts.slice(0, 10).map((post) => (
-                  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden h-full flex flex-col group">
-                    <div class="aspect-video overflow-hidden relative">
-                      <img
-                        src={getPostImage(post).url}
-                        alt={getPostImage(post).alt}
-                        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      {post.categories?.nodes && post.categories.nodes.length > 0 && (
-                        <div class="absolute top-4 left-4 flex flex-wrap gap-2">
-                          {post.categories.nodes.slice(0, 1).map((category) => (
-                            <a
-                              href={`/${category.slug}`}
-                              class="text-xs font-medium bg-white/10 backdrop-blur-sm text-white px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors"
-                            >
-                              {category.name}
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div class="p-5 flex-grow flex flex-col">
-                      <h3 class="text-lg font-bold mb-3 line-clamp-2 group-hover:text-primary transition-colors flex-grow">
-                        <a href={`/${post.slug}`} class="hover:underline decoration-primary/50 decoration-2 underline-offset-4">
-                          {post.title}
-                        </a>
-                      </h3>
-                      <p class="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-4" set:html={post.excerpt} />
-                      <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <time datetime={post.date}>
-                            {new Date(post.date).toLocaleDateString('es-MX', {
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </time>
-                        </div>
-                        <a href={`/${post.slug}`} class="text-sm text-primary font-medium hover:underline inline-flex items-center group">
-                          <span>Leer</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                          </svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )
-        }
+            </div>
+          </a>
+        )}
       </div>
 
-      <!-- Sidebar -->
-      <div class="lg:col-span-1">
-        <div class="sticky top-8 space-y-8">
-          <!-- Categories Widget -->
-          <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
-            <h3 class="text-xl font-bold mb-4 pb-2 border-b border-gray-100 dark:border-gray-700">Temas destacados</h3>
-            <CategoryList />
-          </div>
+      <!-- Sidebar Posts -->
+      <div class="lg:col-span-4 flex flex-col h-full">
+        <div class="flex items-center justify-between mb-4 lg:hidden">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-1 h-6 bg-primary rounded-full"></span>
+            Más noticias
+          </h3>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-col lg:h-full lg:justify-between gap-4 sm:gap-6">
+          {sidebarPosts.map((post) => (
+            <article class="flex gap-4 group cursor-pointer items-start bg-white dark:bg-surface-dark/50 lg:bg-transparent lg:dark:bg-transparent p-3 lg:p-0 rounded-xl lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 dark:border-gray-800 lg:border-none">
+              <a href={`/${post.slug}`} class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-gray-200 shrink-0 bg-cover bg-center overflow-hidden block"
+                 style={`background-image: url('${getPostImage(post).url}');`}>
+              </a>
+              <div class="flex flex-col gap-1">
+                {post.categories?.nodes?.[0] && (
+                  <span class="text-primary text-[10px] sm:text-xs font-bold uppercase">
+                    {post.categories.nodes[0].name}
+                  </span>
+                )}
+                <h3 class="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-3">
+                  <a href={`/${post.slug}`}>{post.title}</a>
+                </h3>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-</Layout>
-
-<!-- Sección de Storylines para la categoría Laberinto (full width) -->
-<style>
-  .storylines-wrapper {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
-  }
-
-  :global(.dark) .storylines-wrapper {
-    background-color: #1a1a1a;
-  }
-</style>
-
-<div class="storylines-wrapper">
-  <CategoryStorylines categorySlug="laberinto" categoryTitle="Laberinto" maxPosts={6} />
-</div>
-
-<!-- Banner Promocional -->
-<PromoBanner />
-
-<!-- Footer -->
-<footer class="bg-gray-100 dark:bg-zinc-900 text-gray-600 dark:text-gray-300 p-6 mt-auto transition-colors">
-  <div class="container mx-auto">
-    <div class="flex flex-col md:flex-row justify-between items-center">
-      <div class="mb-4 md:mb-0">
-        <h3 class="text-xl font-bold text-primary dark:text-primary/90">Amaqueme</h3>
-        <p class="mt-2">Periodico</p>
+  <!-- Recent Articles + Popular Topics -->
+  <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+    <!-- Recent Articles -->
+    <div class="lg:col-span-8 flex flex-col">
+      <div class="flex items-center justify-between mb-6 sm:mb-8 border-b border-gray-100 pb-4">
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Artículos recientes</h2>
+        <a href="/noticias" class="text-primary hover:text-primary-dark font-medium text-sm flex items-center gap-1 transition-colors">
+          Ver más <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        </a>
       </div>
-      <div>
-        <p>&copy; {new Date().getFullYear()} Amaqueme. Todos los derechos reservados.</p>
+
+      <div class="flex flex-col gap-6 sm:gap-8">
+        {recentPosts.map((post) => {
+          const postCategories = post.categories?.nodes || [];
+          return (
+            <article class="flex flex-col md:flex-row gap-4 sm:gap-6 bg-white dark:bg-surface-dark rounded-2xl p-4 md:p-6 shadow-card hover:shadow-lg transition-all duration-300 group border border-transparent hover:border-gray-100 dark:hover:border-gray-700">
+              <div class="w-full md:w-64 h-48 sm:h-56 md:h-auto rounded-xl overflow-hidden shrink-0 relative">
+                <a href={`/${post.slug}`} class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110 block"
+                   style={`background-image: url('${getPostImage(post).url}');`}>
+                </a>
+                {postCategories.length > 0 && (
+                  <div class="absolute top-3 left-3 flex flex-wrap gap-2">
+                    {postCategories.slice(0, 2).map((cat) => (
+                      <a href={`/${cat.slug}`} class="bg-white/20 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold px-2 py-1 rounded">
+                        {cat.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div class="flex flex-col flex-1 py-1">
+                <h3 class="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2 sm:mb-3 leading-tight group-hover:text-primary transition-colors">
+                  <a href={`/${post.slug}`}>{post.title}</a>
+                </h3>
+                <p class="text-text-muted dark:text-gray-400 text-sm sm:text-[15px] leading-relaxed mb-4 sm:mb-6 line-clamp-2 md:line-clamp-3" set:html={post.excerpt} />
+                <div class="mt-auto flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-text-muted text-xs font-medium">
+                    <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                    {new Date(post.date).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </div>
+                  <a href={`/${post.slug}`} class="text-primary text-sm font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    Leer <span class="hidden sm:inline">artículo</span> <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                  </a>
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </div>
+
+    <!-- Popular Topics Sidebar -->
+    <aside class="lg:col-span-4 flex flex-col gap-6">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Temas populares</h3>
+        <span class="text-xs font-medium text-slate-500 dark:text-slate-400 lg:hidden">Desliza para ver más</span>
+      </div>
+
+      <div class="flex overflow-x-auto lg:overflow-visible gap-4 pb-4 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0 lg:flex-col lg:gap-4 scrollbar-hide snap-x">
+        {topCategories.map((category, index) => {
+          const colors = categoryColors[index % categoryColors.length];
+          const icon = getCategoryIcon(category.name);
+          return (
+            <a href={`/${category.slug}`} class={`snap-center min-w-[280px] lg:min-w-0 flex-shrink-0 group ${colors.bg} rounded-xl p-4 lg:p-5 flex items-center justify-between cursor-pointer ${colors.hover} transition-colors`}>
+              <div class="flex items-center gap-4">
+                <div class={`size-10 rounded-lg ${colors.icon} flex items-center justify-center`}>
+                  <span class="material-symbols-outlined">{icon}</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900 dark:text-white">{category.name}</h4>
+                  <p class={`text-xs ${colors.text} font-medium`}>{category.count} artículos</p>
+                </div>
+              </div>
+              <span class={`material-symbols-outlined ${colors.arrow} text-[18px] group-hover:translate-x-1 transition-transform`}>chevron_right</span>
+            </a>
+          );
+        })}
+      </div>
+    </aside>
   </div>
-</footer>
+  </section>
+
+  <!-- Laberinto Category Storylines -->
+  <CategoryStorylines categorySlug="laberinto" categoryTitle="Laberinto" maxPosts={6} />
+
+  <!-- Promotional Banner -->
+  <PromoBanner />
+</Layout>

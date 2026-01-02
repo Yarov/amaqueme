@@ -1,8 +1,8 @@
 ---
 // Componente minimalista para mostrar posts destacados
+// Diseño moderno con hero principal y sidebar de noticias
 import { getFeaturedPostsWithImages } from "../lib/wordpress";
 import { getPostImage } from '../utils/getPostImage';
-import { getReadingTime } from '../utils/readingTime';
 
 // Obtener posts con imágenes destacadas
 const featuredPosts = await getFeaturedPostsWithImages();
@@ -10,73 +10,65 @@ const featuredPosts = await getFeaturedPostsWithImages();
 
 <div class="minimal-featured">
   {featuredPosts.length > 0 ? (
-    <div class="flex flex-col md:flex-row gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Post principal (izquierda) */}
-      <div class="md:w-2/3 featured-main-post">
-        <a href={`/${featuredPosts[0].slug}`} class="group block relative rounded-xl overflow-hidden h-[400px] md:h-[500px]">
-          <div class="absolute top-0 left-0 z-10 m-4">
-            <span class="inline-block bg-primary text-white text-xs uppercase font-bold px-3 py-1 rounded">
-              {featuredPosts[0].categories?.nodes && featuredPosts[0].categories.nodes.length > 0 
-                ? featuredPosts[0].categories.nodes[0].name 
-                : 'Destacado'}
-            </span>
-          </div>
-          <img 
-            src={getPostImage(featuredPosts[0]).url} 
-            alt={getPostImage(featuredPosts[0]).alt}
-            class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-            loading="eager"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6 md:p-8">
-            <h2 class="text-2xl md:text-4xl font-bold text-white mb-3 leading-tight">
+      <div class="lg:col-span-8">
+        <a href={`/${featuredPosts[0].slug}`} class="block relative w-full aspect-[4/5] sm:aspect-video lg:h-[600px] rounded-2xl overflow-hidden shadow-soft group cursor-pointer">
+          <div
+            class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+            style={`background-image: url('${getPostImage(featuredPosts[0]).url}');`}
+          ></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+          <div class="absolute bottom-0 left-0 p-5 sm:p-10 w-full max-w-4xl">
+            {featuredPosts[0].categories?.nodes?.[0] && (
+              <span class="inline-block px-3 py-1 mb-3 sm:mb-4 text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider bg-primary rounded-md shadow-sm">
+                {featuredPosts[0].categories.nodes[0].name}
+              </span>
+            )}
+            <h2 class="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 leading-snug sm:leading-tight">
               {featuredPosts[0].title}
             </h2>
-            <div class="flex items-center text-white/70 text-sm">
-              <span class="font-medium">{featuredPosts[0].author?.node?.name || 'Redacción'}</span>
-              <span class="mx-2">•</span>
-              <time datetime={featuredPosts[0].date}>
-                {new Date(featuredPosts[0].date).toLocaleDateString('es-MX', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </time>
+            <div class="flex items-center gap-3 text-gray-300 text-xs sm:text-sm font-medium">
+              <span>{featuredPosts[0].author?.node?.name || 'Redacción'}</span>
+              <span class="size-1 rounded-full bg-gray-400"></span>
+              <span>{new Date(featuredPosts[0].date).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })}</span>
             </div>
           </div>
         </a>
       </div>
 
       {/* Posts secundarios (derecha, en columna) */}
-      <div class="md:w-1/3 space-y-4">
-        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2 md:mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">Noticias Destacadas</h3>
-        
-        {featuredPosts.slice(1, 5).map((post, index) => (
-          <div class="group">
-            <a href={`/${post.slug}`} class="flex items-start gap-3 pb-4 mb-4 border-b border-gray-100 dark:border-gray-800">
-              <div class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded overflow-hidden">
-                <img 
-                  src={getPostImage(post).url} 
-                  alt={getPostImage(post).alt}
-                  class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                />
-              </div>
-              <div class="flex-grow">
-                {post.categories?.nodes && post.categories.nodes.length > 0 && (
-                  <span class="text-xs text-primary font-medium mb-1 block">
+      <div class="lg:col-span-4 flex flex-col h-full">
+        <div class="flex items-center justify-between mb-4 lg:hidden">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="w-1 h-6 bg-primary rounded-full"></span>
+            Noticias Destacadas
+          </h3>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-col lg:h-full lg:justify-between gap-4 sm:gap-6">
+          {featuredPosts.slice(1, 5).map((post) => (
+            <article class="flex gap-4 group cursor-pointer items-start bg-white dark:bg-surface-dark/50 lg:bg-transparent lg:dark:bg-transparent p-3 lg:p-0 rounded-xl lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 dark:border-gray-800 lg:border-none">
+              <a href={`/${post.slug}`} class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-gray-200 shrink-0 bg-cover bg-center overflow-hidden block"
+                 style={`background-image: url('${getPostImage(post).url}');`}>
+              </a>
+              <div class="flex flex-col gap-1">
+                {post.categories?.nodes?.[0] && (
+                  <span class="text-primary text-[10px] sm:text-xs font-bold uppercase">
                     {post.categories.nodes[0].name}
                   </span>
                 )}
-                <h4 class="text-sm md:text-base font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-                  {post.title}
+                <h4 class="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-white leading-snug group-hover:text-primary transition-colors line-clamp-3">
+                  <a href={`/${post.slug}`}>{post.title}</a>
                 </h4>
               </div>
-            </a>
-          </div>
-        ))}
+            </article>
+          ))}
+        </div>
       </div>
     </div>
   ) : (
-    <div class="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-gray-800 rounded-xl">
+    <div class="flex items-center justify-center h-[300px] bg-gray-100 dark:bg-surface-dark rounded-xl">
       <div class="text-center p-8">
         <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">No hay artículos destacados</h3>
         <p class="text-gray-600 dark:text-gray-300">Agrega imágenes destacadas a tus posts en WordPress para que aparezcan aquí.</p>
@@ -84,19 +76,3 @@ const featuredPosts = await getFeaturedPostsWithImages();
     </div>
   )}
 </div>
-
-<style>
-  .minimal-featured {
-    margin-bottom: 2rem;
-  }
-  
-  .featured-main-post {
-    margin-bottom: 1rem;
-  }
-  
-  @media (max-width: 768px) {
-    .featured-main-post {
-      margin-bottom: 1.5rem;
-    }
-  }
-</style>

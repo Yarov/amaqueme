@@ -1,9 +1,8 @@
 ---
 // Componente para mostrar artículos de una categoría específica en formato Storylines
-// Basado en el diseño de referencia compartido
+// Diseño moderno basado en la referencia visual
 import { getPostsByCategory } from "../lib/wordpress";
 import { getPostImage } from '../utils/getPostImage';
-import { getReadingTime } from '../utils/readingTime';
 
 interface Props {
   categorySlug: string;
@@ -18,120 +17,81 @@ const { posts } = await getPostsByCategory(categorySlug, 1, maxPosts);
 
 // Título por defecto si no se proporciona uno
 const displayTitle = categoryTitle || (posts.length > 0 && posts[0].categories?.nodes?.[0]?.name) || categorySlug;
+
+// Determinar iniciales para el badge basado en el nombre de la categoría
+const getCategoryBadge = (categoryName: string) => {
+  return categoryName.substring(0, 2).toUpperCase();
+};
+
+// Determinar color del badge basado en el slug de la categoría
+const getBadgeColor = (slug: string) => {
+  const s = slug.toLowerCase();
+  if (s.includes('laberinto')) return 'bg-green-100 text-green-800';
+  if (s.includes('atlautla')) return 'bg-blue-100 text-blue-800';
+  if (s.includes('amecameca')) return 'bg-indigo-100 text-indigo-800';
+  if (s.includes('chalco')) return 'bg-purple-100 text-purple-800';
+  if (s.includes('tlalmanalco')) return 'bg-orange-100 text-orange-800';
+  return 'bg-gray-100 text-gray-800';
+};
 ---
 
-<section class="storylines-section py-12 w-full bg-gray-50 dark:bg-gray-900">
-  <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-6 px-4 md:px-8">
+<section class="border-t border-gray-100 pt-8 sm:pt-12 w-full bg-[#fcfcfc] dark:bg-background-dark">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-end justify-between mb-6 sm:mb-8">
       <div>
-        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
-          {displayTitle}
-        </h2>
-        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Mantente al día con los temas tendencia</p>
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-1 sm:mb-2">{displayTitle}</h2>
+        <p class="text-sm sm:text-base text-text-muted dark:text-gray-400">Mantente al día con los temas tendencia</p>
       </div>
-      <a href={`/${categorySlug}`} class="text-primary hover:underline flex items-center text-sm font-medium group">
-        <span>Ver más</span>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-        </svg>
+      <a href={`/${categorySlug}`} class="text-primary hover:text-primary-dark font-medium text-sm flex items-center gap-1 transition-colors">
+        Ver más <span class="material-symbols-outlined text-[16px]">chevron_right</span>
       </a>
     </div>
 
     {posts.length > 0 ? (
-      <div class="relative">
-        <div class="px-4 md:px-8 overflow-x-auto pb-6">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:flex md:space-x-4 pb-2 scrollbar-hide" style="scroll-snap-type: x mandatory; overflow-x: auto; mask-image: linear-gradient(to right, black 80%, transparent 98%);">
-          {posts.slice(0, 4).map((post, index) => {
-            // Determinar la categoría principal para el icono
-            const category = post.categories?.nodes?.[0];
-            const categoryName = category?.name || "General";
-            const categorySlug = category?.slug || "general";
-            
-            // Determinar el icono de la categoría (usando las primeras letras del nombre de la categoría)
-            const categoryInitials = categoryName.substring(0, 2).toUpperCase();
-            
-            // Determinar el color de fondo del icono basado en la categoría
-            let bgColorClass = "bg-blue-100 text-blue-600";
-            if (categoryName.toLowerCase().includes("tech") || categoryName.toLowerCase().includes("tecnolog")) {
-              bgColorClass = "bg-blue-100 text-blue-600";
-            } else if (categoryName.toLowerCase().includes("empresa") || categoryName.toLowerCase().includes("negocio")) {
-              bgColorClass = "bg-purple-100 text-purple-600";
-            } else if (categoryName.toLowerCase().includes("hardware") || categoryName.toLowerCase().includes("equipo")) {
-              bgColorClass = "bg-orange-100 text-orange-600";
-            } else if (categoryName.toLowerCase().includes("transformaci") || categoryName.toLowerCase().includes("cambio")) {
-              bgColorClass = "bg-red-100 text-red-600";
-            } else if (categoryName.toLowerCase().includes("laberinto")) {
-              bgColorClass = "bg-green-100 text-green-600";
-            }
-            
-            return (
-              <div class="storyline-card bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all group md:min-w-[280px] md:max-w-[320px] flex-shrink-0" style="scroll-snap-align: start;">
-                <div class="aspect-video overflow-hidden relative mb-2">
-                  <img 
-                    src={getPostImage(post).url} 
-                    alt={getPostImage(post).alt || post.title}
-                    class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <div class="absolute top-2 left-2">
-                    <div class={`w-6 h-6 rounded-sm flex items-center justify-center ${bgColorClass} dark:opacity-80`}>
-                      <span class="text-xs font-bold">{categoryInitials}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="p-4">
-                  <div>
-                    <span class="text-xs font-medium text-gray-800 dark:text-gray-200">{categoryName}</span>
-                  </div>
-                  
-                  <a href={`/${post.slug}`} class="block mt-2">
-                    <h3 class="font-bold text-gray-800 dark:text-white text-base line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h3>
-                  </a>
-                  
-                  <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-3">
-                    <div class="flex items-center">
-                      <span class="mr-1">•</span>
-                      <span class="truncate max-w-[80px]">{post.author?.node?.name || 'Redacción'}</span>
-                    </div>
-                    <div class="flex items-center">
-                      <time datetime={post.date}>
-                        {new Date(post.date).toLocaleDateString('es-MX', {
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </time>
-                    </div>
-                  </div>
+      <div class="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide snap-x">
+        {posts.slice(0, 4).map((post, index) => {
+          const category = post.categories?.nodes?.[0];
+          const categoryName = category?.name || "General";
+          const categorySlug = category?.slug || "general";
+          const badge = getCategoryBadge(categoryName);
+          const badgeColor = getBadgeColor(categorySlug);
+          const isLast = index === 3;
+
+          return (
+            <div class={`min-w-[85%] sm:min-w-[45%] md:min-w-0 snap-center bg-white dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col h-full border border-gray-100 dark:border-transparent ${isLast ? 'relative' : ''}`}>
+              <div class="relative aspect-[4/3] overflow-hidden">
+                <div
+                  class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+                  style={`background-image: url('${getPostImage(post).url}'); ${isLast ? 'opacity: 0.6;' : ''}`}
+                ></div>
+                <div class={`absolute top-3 left-3 ${badgeColor} text-[11px] font-bold px-2 py-1 rounded uppercase tracking-wide`}>
+                  {badge}
                 </div>
               </div>
-            );
-          })}
-          
-          {posts.length > 4 && (
-            <div class="hidden md:flex items-center justify-center min-w-[280px] max-w-[320px] h-full">
-              <a href={`/${categorySlug}`} class="flex flex-col items-center justify-center text-primary hover:underline group p-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-                <span class="font-medium">Ver más artículos</span>
-              </a>
+              <div class="p-4 sm:p-5 flex flex-col flex-1">
+                <span class="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase mb-2">{categoryName}</span>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-auto group-hover:text-primary transition-colors">
+                  <a href={`/${post.slug}`}>{post.title}</a>
+                </h3>
+                <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
+                  <span>{post.author?.node?.name || 'Redacción'}</span>
+                  <span>{new Date(post.date).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })}</span>
+                </div>
+              </div>
+
+              {isLast && posts.length > 4 && (
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-white/90 dark:via-background-dark/50 dark:to-background-dark/90 pointer-events-none flex items-center justify-end pr-8">
+                  <a href={`/${categorySlug}`} class="pointer-events-auto size-12 rounded-full bg-white dark:bg-surface-light shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                  </a>
+                </div>
+              )}
             </div>
-          )}
-          </div>
-        </div>
-        
-        <div class="absolute top-1/2 right-4 transform -translate-y-1/2 hidden md:block">
-          <button class="scroll-right-btn bg-white dark:bg-gray-800 rounded-full p-2 shadow-md hover:shadow-lg transition-shadow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+          );
+        })}
       </div>
     ) : (
-      <div class="flex items-center justify-center h-[200px] bg-gray-100 dark:bg-gray-800 rounded-xl mx-4">
+      <div class="flex items-center justify-center h-[200px] bg-gray-100 dark:bg-surface-dark rounded-xl">
         <div class="text-center p-8">
           <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">No hay artículos disponibles</h3>
           <p class="text-gray-600 dark:text-gray-300">No se encontraron artículos en esta categoría.</p>
@@ -141,52 +101,12 @@ const displayTitle = categoryTitle || (posts.length > 0 && posts[0].categories?.
   </div>
 </section>
 
-<script>
-  // Script para el botón de scroll horizontal
-  document.addEventListener('DOMContentLoaded', () => {
-    const scrollRightBtn = document.querySelector('.scroll-right-btn');
-    const scrollContainer = scrollRightBtn?.closest('.relative')?.querySelector('.scrollbar-hide');
-    
-    if (scrollRightBtn && scrollContainer) {
-      scrollRightBtn.addEventListener('click', () => {
-        scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
-      });
-    }
-  });
-</script>
-
 <style>
-  .storyline-card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 280px;
-  }
-  
-  .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  
   .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    display: none;
   }
-  
-  /* Estilos para pantallas pequeñas */
-  @media (max-width: 640px) {
-    .storyline-card {
-      min-width: 100%;
-      min-height: 250px;
-    }
-  }
-  
-  /* Botón de scroll */
-  .scroll-right-btn {
-    opacity: 0.9;
-    transition: opacity 0.3s ease;
-  }
-  
-  .scroll-right-btn:hover {
-    opacity: 1;
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 </style>

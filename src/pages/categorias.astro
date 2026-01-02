@@ -4,32 +4,78 @@ import SEO from '../components/seo/SEO.astro';
 import { getAllCategories } from '../lib/wordpress';
 
 const categories = await getAllCategories();
+const sortedCategories = [...categories].sort((a, b) => b.count - a.count);
+
+// Category colors configuration
+const categoryColors = [
+  { bg: 'bg-blue-50 dark:bg-blue-900/10', hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/20', icon: 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200', text: 'text-blue-600 dark:text-blue-300', arrow: 'text-blue-400 dark:text-blue-500' },
+  { bg: 'bg-green-50 dark:bg-green-900/10', hover: 'hover:bg-green-100 dark:hover:bg-green-900/20', icon: 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200', text: 'text-green-600 dark:text-green-300', arrow: 'text-green-400 dark:text-green-500' },
+  { bg: 'bg-emerald-50 dark:bg-emerald-900/10', hover: 'hover:bg-emerald-100 dark:hover:bg-emerald-900/20', icon: 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-200', text: 'text-emerald-600 dark:text-emerald-300', arrow: 'text-emerald-400 dark:text-emerald-500' },
+  { bg: 'bg-orange-50 dark:bg-orange-900/10', hover: 'hover:bg-orange-100 dark:hover:bg-orange-900/20', icon: 'bg-orange-100 dark:bg-orange-800 text-orange-600 dark:text-orange-200', text: 'text-orange-600 dark:text-orange-300', arrow: 'text-orange-400 dark:text-orange-500' },
+  { bg: 'bg-red-50 dark:bg-red-900/10', hover: 'hover:bg-red-100 dark:hover:bg-red-900/20', icon: 'bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-200', text: 'text-red-600 dark:text-red-300', arrow: 'text-red-400 dark:text-red-500' },
+  { bg: 'bg-indigo-50 dark:bg-indigo-900/10', hover: 'hover:bg-indigo-100 dark:hover:bg-indigo-900/20', icon: 'bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-200', text: 'text-indigo-600 dark:text-indigo-300', arrow: 'text-indigo-400 dark:text-indigo-500' },
+  { bg: 'bg-purple-50 dark:bg-purple-900/10', hover: 'hover:bg-purple-100 dark:hover:bg-purple-900/20', icon: 'bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-200', text: 'text-purple-600 dark:text-purple-300', arrow: 'text-purple-400 dark:text-purple-500' },
+  { bg: 'bg-pink-50 dark:bg-pink-900/10', hover: 'hover:bg-pink-100 dark:hover:bg-pink-900/20', icon: 'bg-pink-100 dark:bg-pink-800 text-pink-600 dark:text-pink-200', text: 'text-pink-600 dark:text-pink-300', arrow: 'text-pink-400 dark:text-pink-500' },
+];
+
+// Función para obtener el icono basado en el nombre de la categoría
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('seguridad') || n.includes('inseguridad') || n.includes('polic')) return 'local_police';
+  if (n.includes('gobierno') || n.includes('municipal')) return 'account_balance';
+  if (n.includes('homicidio') || n.includes('crimen')) return 'warning';
+  if (n.includes('estado') || n.includes('méxico')) return 'map';
+  if (n.includes('ciudad') || n.includes('chalco') || n.includes('amecameca') || n.includes('toluca')) return 'location_city';
+  if (n.includes('educación') || n.includes('escuela')) return 'school';
+  if (n.includes('salud') || n.includes('hospital')) return 'health_and_safety';
+  if (n.includes('deporte') || n.includes('futbol')) return 'sports_soccer';
+  if (n.includes('cultura') || n.includes('arte')) return 'palette';
+  if (n.includes('tecnología') || n.includes('tech')) return 'devices';
+  if (n.includes('laberinto')) return 'explore';
+  if (n.includes('política') || n.includes('politica')) return 'gavel';
+  return 'location_on';
+};
 ---
 
 <Layout title="Categorías - Amaqueme">
-  <SEO 
+  <SEO
     title="Categorías - Amaqueme"
     description="Explora nuestros artículos por categoría y encuentra contenido relacionado con tus temas favoritos."
     type="website"
   />
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold mb-6">Categorías</h1>
-    <p class="text-gray-600">Explora nuestros artículos por categoría.</p>
-  </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {categories.map((category) => (
-      <a 
-        href={`/${category.slug}`}
-        class="block bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100"
-      >
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-bold text-gray-800">{category.name}</h2>
-          <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-            {category.count} {category.count === 1 ? 'artículo' : 'artículos'}
-          </span>
-        </div>
-      </a>
-    ))}
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Header Section -->
+    <section class="mb-8 sm:mb-12">
+      <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Categorías</h1>
+      <p class="text-text-muted dark:text-gray-400">Explora nuestros artículos por categoría y encuentra contenido de tu interés.</p>
+    </section>
+
+    <!-- Categories Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    {sortedCategories.map((category, index) => {
+      const colors = categoryColors[index % categoryColors.length];
+      const icon = getCategoryIcon(category.name);
+      return (
+        <a
+          href={`/${category.slug}`}
+          class={`group ${colors.bg} rounded-xl p-5 sm:p-6 flex items-center justify-between cursor-pointer ${colors.hover} transition-all duration-300 border border-transparent hover:border-gray-100 dark:hover:border-gray-700`}
+        >
+          <div class="flex items-center gap-4">
+            <div class={`size-12 rounded-xl ${colors.icon} flex items-center justify-center`}>
+              <span class="material-symbols-outlined text-[24px]">{icon}</span>
+            </div>
+            <div>
+              <h2 class="font-bold text-slate-900 dark:text-white text-lg">{category.name}</h2>
+              <p class={`text-sm ${colors.text} font-medium`}>
+                {category.count} {category.count === 1 ? 'artículo' : 'artículos'}
+              </p>
+            </div>
+          </div>
+          <span class={`material-symbols-outlined ${colors.arrow} text-[20px] group-hover:translate-x-1 transition-transform`}>chevron_right</span>
+        </a>
+      );
+    })}
   </div>
+</div>
 </Layout>

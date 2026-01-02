@@ -37,21 +37,25 @@ const regularPosts = content.meta.regularPosts || [];
 const pagination = content.meta.pagination || null;
 ---
 
-<div class="container mx-auto px-4 py-8 mt-16 md:mt-20">
+<div>
   {content.type === 'post' && (
     <PostContent post={content.data} />
   )}
 
   {content.type === 'category' && (
-    <CategoryContent 
-      category={content.data}
-      featuredPosts={featuredPosts}
-      regularPosts={regularPosts}
-      pagination={pagination}
-    />
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <CategoryContent
+        category={content.data}
+        featuredPosts={featuredPosts}
+        regularPosts={regularPosts}
+        pagination={pagination}
+      />
+    </div>
   )}
 
   {content.type === 'page' && (
-    <PageContent page={content.data} />
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <PageContent page={content.data} />
+    </div>
   )}
 </div>
