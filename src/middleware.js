@@ -91,7 +91,26 @@ function detectContentType(pathname) {
 
 function extractSlugFromPath(pathname) {
   const segments = pathname.split('/').filter(s => s);
-  return segments[segments.length - 1] || 'home';
+  
+  // Para rutas de categoría con paginación: /category/slug/page/N
+  if (segments.includes('category') && segments.includes('page')) {
+    const categoryIndex = segments.indexOf('category');
+    return segments[categoryIndex + 1] || 'home';
+  }
+  
+  // Para rutas de categoría sin paginación: /category/slug
+  if (segments[0] === 'category' && segments.length >= 2) {
+    return segments[1];
+  }
+  
+  // Para otras rutas, tomar el último segmento (excepto si es 'page' o un número)
+  const lastSegment = segments[segments.length - 1];
+  if (lastSegment === 'page' || /^\d+$/.test(lastSegment)) {
+    // Si el último segmento es 'page' o un número, tomar el anterior
+    return segments[segments.length - 2] || 'home';
+  }
+  
+  return lastSegment || 'home';
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -103,7 +122,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Always track in production/development (analytics enabled by default)
   const shouldTrack = response.status === 200 && 
                       !url.pathname.startsWith('/_') && 
-                      !url.pathname.startsWith('/api/');
+                      !url.pathname.startsWith('/api/') &&
+                      !url.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$/);
   
   console.log('🔍 Middleware executing:', {
     status: response.status,
