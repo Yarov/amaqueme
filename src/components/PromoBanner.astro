@@ -9,19 +9,21 @@ const link = banner?.bannerFields?.url || "";
 const bannerImageUrl = banner?.bannerFields?.image?.node?.sourceUrl || "";
 ---
 
-<div class="container mx-auto my-8">
-  <div class="flex justify-center">
-    <a
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="block hover:opacity-90 transition-opacity"
-    >
-      <img
-        src={bannerImageUrl}
-        alt="Banner promocional"
-        class="max-w-full h-auto rounded shadow-md"
-      />
-    </a>
+{bannerImageUrl && (
+  <div class="container mx-auto my-8">
+    <div class="flex justify-center">
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="block hover:opacity-90 transition-opacity"
+      >
+        <img
+          src={bannerImageUrl}
+          alt="Banner promocional"
+          class="max-w-full h-auto rounded shadow-md"
+        />
+      </a>
+    </div>
   </div>
-</div>
+)}

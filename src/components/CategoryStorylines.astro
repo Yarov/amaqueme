@@ -1,6 +1,4 @@
 ---
-// Componente para mostrar artículos de una categoría específica en formato Storylines
-// Diseño moderno basado en la referencia visual
 import { getPostsByCategory } from "../lib/wordpress";
 import { getPostImage } from '../utils/getPostImage';
 
@@ -12,94 +10,123 @@ interface Props {
 
 const { categorySlug, categoryTitle, maxPosts = 6 } = Astro.props;
 
-// Obtener posts de la categoría especificada
 const { posts } = await getPostsByCategory(categorySlug, 1, maxPosts);
 
-// Título por defecto si no se proporciona uno
 const displayTitle = categoryTitle || (posts.length > 0 && posts[0].categories?.nodes?.[0]?.name) || categorySlug;
-
-// Determinar iniciales para el badge basado en el nombre de la categoría
-const getCategoryBadge = (categoryName: string) => {
-  return categoryName.substring(0, 2).toUpperCase();
-};
-
-// Determinar color del badge basado en el slug de la categoría
-const getBadgeColor = (slug: string) => {
-  const s = slug.toLowerCase();
-  if (s.includes('laberinto')) return 'bg-green-100 text-green-800';
-  if (s.includes('atlautla')) return 'bg-blue-100 text-blue-800';
-  if (s.includes('amecameca')) return 'bg-indigo-100 text-indigo-800';
-  if (s.includes('chalco')) return 'bg-purple-100 text-purple-800';
-  if (s.includes('tlalmanalco')) return 'bg-orange-100 text-orange-800';
-  return 'bg-gray-100 text-gray-800';
-};
 ---
 
-<section class="border-t border-gray-100 pt-8 sm:pt-12 w-full bg-[#fcfcfc] dark:bg-background-dark">
+<section class="w-full">
   <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-end justify-between mb-6 sm:mb-8">
-      <div>
-        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-1 sm:mb-2">{displayTitle}</h2>
-        <p class="text-sm sm:text-base text-text-muted dark:text-gray-400">Mantente al día con los temas tendencia</p>
-      </div>
-      <a href={`/${categorySlug}`} class="text-primary hover:text-primary-dark font-medium text-sm flex items-center gap-1 transition-colors">
-        Ver más <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-      </a>
-    </div>
-
-    {posts.length > 0 ? (
-      <div class="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide snap-x">
-        {posts.slice(0, 4).map((post, index) => {
-          const category = post.categories?.nodes?.[0];
-          const categoryName = category?.name || "General";
-          const categorySlug = category?.slug || "general";
-          const badge = getCategoryBadge(categoryName);
-          const badgeColor = getBadgeColor(categorySlug);
-          const isLast = index === 3;
-
-          return (
-            <div class={`min-w-[85%] sm:min-w-[45%] md:min-w-0 snap-center bg-white dark:bg-surface-dark rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col h-full border border-gray-100 dark:border-transparent ${isLast ? 'relative' : ''}`}>
-              <div class="relative aspect-[4/3] overflow-hidden">
+    <div class="bg-black text-white -mx-4 sm:-mx-6 lg:-mx-8 sm:rounded-3xl py-12 px-4 sm:px-12 relative overflow-hidden">
+      <div class="absolute top-0 right-0 p-32 bg-primary blur-[120px] opacity-20 pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 p-32 bg-purple-600 blur-[120px] opacity-20 pointer-events-none"></div>
+      <div class="relative z-10">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <span class="text-primary font-bold tracking-wider text-xs uppercase mb-1 block">Exclusivo</span>
+            <h2 class="font-display text-3xl font-bold text-white">{displayTitle}</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button 
+              id={`scroll-btn-back-${categorySlug}`}
+              class="size-10 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors"
+              aria-label="Ver artículos anteriores"
+            >
+              <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <button 
+              id={`scroll-btn-forward-${categorySlug}`}
+              class="size-10 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors"
+              aria-label="Ver más artículos"
+            >
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+        <div 
+          id={`scroll-container-${categorySlug}`}
+          class="flex overflow-x-scroll gap-6 pb-6 -mx-4 px-4 sm:-mx-12 sm:px-12 snap-x snap-mandatory scrollbar-hide"
+        >
+          {posts.slice(0, maxPosts).map((post) => (
+            <div class="snap-center shrink-0 w-[300px] group cursor-pointer">
+              <div class="relative aspect-[16/10] overflow-hidden rounded-xl mb-4">
                 <div
                   class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                  style={`background-image: url('${getPostImage(post).url}'); ${isLast ? 'opacity: 0.6;' : ''}`}
+                  style={`background-image: url('${getPostImage(post).url}');`}
                 ></div>
-                <div class={`absolute top-3 left-3 ${badgeColor} text-[11px] font-bold px-2 py-1 rounded uppercase tracking-wide`}>
-                  {badge}
-                </div>
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
               </div>
-              <div class="p-4 sm:p-5 flex flex-col flex-1">
-                <span class="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase mb-2">{categoryName}</span>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-auto group-hover:text-primary transition-colors">
-                  <a href={`/${post.slug}`}>{post.title}</a>
-                </h3>
-                <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
-                  <span>{post.author?.node?.name || 'Redacción'}</span>
-                  <span>{new Date(post.date).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })}</span>
-                </div>
-              </div>
-
-              {isLast && posts.length > 4 && (
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-white/90 dark:via-background-dark/50 dark:to-background-dark/90 pointer-events-none flex items-center justify-end pr-8">
-                  <a href={`/${categorySlug}`} class="pointer-events-auto size-12 rounded-full bg-white dark:bg-surface-light shadow-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">arrow_forward</span>
-                  </a>
-                </div>
-              )}
+              <h3 class="font-display font-bold text-xl leading-tight mb-2 text-white group-hover:text-primary transition-colors">{post.title}</h3>
+              <p class="text-gray-400 text-sm line-clamp-2">
+                {post.excerpt ? post.excerpt.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : 'Análisis profundo sobre los movimientos políticos internos.'}
+              </p>
             </div>
-          );
-        })}
-      </div>
-    ) : (
-      <div class="flex items-center justify-center h-[200px] bg-gray-100 dark:bg-surface-dark rounded-xl">
-        <div class="text-center p-8">
-          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">No hay artículos disponibles</h3>
-          <p class="text-gray-600 dark:text-gray-300">No se encontraron artículos en esta categoría.</p>
+          ))}
         </div>
       </div>
-    )}
+    </div>
   </div>
 </section>
+
+<script define:vars={{ categorySlug }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const scrollBtnBack = document.getElementById(`scroll-btn-back-${categorySlug}`);
+    const scrollBtnForward = document.getElementById(`scroll-btn-forward-${categorySlug}`);
+    const scrollContainer = document.getElementById(`scroll-container-${categorySlug}`);
+    
+    const cardWidth = 300; // Width of each card
+    const gap = 24; // gap-6 = 24px
+    const scrollAmount = cardWidth + gap;
+    
+    // Function to update button visibility
+    const updateButtonVisibility = () => {
+      if (!scrollContainer || !scrollBtnBack || !scrollBtnForward) return;
+      
+      const scrollLeft = scrollContainer.scrollLeft;
+      const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+      
+      // Hide back button if at the start (with small threshold)
+      if (scrollLeft <= 10) {
+        scrollBtnBack.style.display = 'none';
+      } else {
+        scrollBtnBack.style.display = 'flex';
+      }
+      
+      // Hide forward button if at the end (with small threshold)
+      if (scrollLeft >= maxScroll - 10) {
+        scrollBtnForward.style.display = 'none';
+      } else {
+        scrollBtnForward.style.display = 'flex';
+      }
+    };
+    
+    // Initial check
+    updateButtonVisibility();
+    
+    // Update on scroll
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', updateButtonVisibility);
+    }
+    
+    if (scrollBtnBack && scrollContainer) {
+      scrollBtnBack.addEventListener('click', () => {
+        scrollContainer.scrollBy({
+          left: -scrollAmount,
+          behavior: 'smooth'
+        });
+      });
+    }
+    
+    if (scrollBtnForward && scrollContainer) {
+      scrollBtnForward.addEventListener('click', () => {
+        scrollContainer.scrollBy({
+          left: scrollAmount,
+          behavior: 'smooth'
+        });
+      });
+    }
+  });
+</script>
 
 <style>
   .scrollbar-hide::-webkit-scrollbar {
@@ -108,5 +135,11 @@ const getBadgeColor = (slug: string) => {
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  .snap-x {
+    scroll-snap-type: x mandatory;
+  }
+  .snap-center {
+    scroll-snap-align: center;
   }
 </style>

@@ -15,7 +15,8 @@ export default {
         "text-muted": "#64748b"
       },
       fontFamily: {
-        "display": ["Work Sans", "Inter", "sans-serif"]
+        "display": ["Space Grotesk", "sans-serif"],
+        "body": ["Work Sans", "sans-serif"]
       },
       boxShadow: {
         'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
