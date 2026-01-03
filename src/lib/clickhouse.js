@@ -8,6 +8,8 @@ function getClickHouseConfig() {
     username: process.env.CLICKHOUSE_USER || 'default',
     password: process.env.CLICKHOUSE_PASSWORD || '',
     database: process.env.CLICKHOUSE_DATABASE || 'amaqueme_analytics',
+    request_timeout: 30000, // 30 segundos
+    connect_timeout: 10000, // 10 segundos
   };
 }
 
