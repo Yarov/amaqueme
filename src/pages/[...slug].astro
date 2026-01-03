@@ -18,6 +18,33 @@ const resolvedContent = await useContentResolver(slug || '', page);
 
 console.log(`[...slug].astro: Resolviendo contenido para slug '${slug}', página ${page}`);
 
+// Guardar datos en locals para el middleware de analytics
+if (resolvedContent.type === 'post' && resolvedContent.data) {
+  const post = resolvedContent.data;
+  
+  // Extraer la primera categoría del post si existe
+  const primaryCategory = post.categories?.nodes?.[0] || post.categories?.[0] || null;
+  
+  Astro.locals.post = {
+    id: post.id || post.databaseId || '',
+    databaseId: post.databaseId || '',
+    title: post.title || '',
+    slug: post.slug || slug || ''
+  };
+  
+  // Guardar también la categoría del post
+  if (primaryCategory) {
+    Astro.locals.category = {
+      slug: primaryCategory.slug || '',
+      name: primaryCategory.name || ''
+    };
+  }
+} else if (resolvedContent.type === 'category' && resolvedContent.data) {
+  Astro.locals.category = {
+    slug: resolvedContent.data.slug || slug || '',
+    name: resolvedContent.data.name || ''
+  };
+}
 
 // Obtener el título para la página
 const pageTitle = resolvedContent.meta.title;

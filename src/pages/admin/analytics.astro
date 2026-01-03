@@ -1,0 +1,249 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getAnalyticsSummary } from '../../utils/analytics';
+
+const analytics = await getAnalyticsSummary(30);
+
+const formatNumber = (num) => {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+  return num.toString();
+};
+---
+
+<Layout title="Analytics Dashboard - Amaqueme">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          Analytics Dashboard
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+          Estadísticas de los últimos 30 días
+        </p>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Vistas</h3>
+            <span class="material-symbols-outlined text-primary text-2xl">visibility</span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {formatNumber(analytics.summary.totalViews)}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            {analytics.summary.avgViewsPerDay.toLocaleString()} promedio/día
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Visitantes Únicos</h3>
+            <span class="material-symbols-outlined text-blue-500 text-2xl">person</span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {formatNumber(analytics.summary.totalUniqueVisitors)}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            {analytics.summary.avgUniqueVisitorsPerDay.toLocaleString()} promedio/día
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Posts Populares</h3>
+            <span class="material-symbols-outlined text-green-500 text-2xl">trending_up</span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {analytics.mostViewed.length}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Con más de 100 vistas
+          </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Categorías Activas</h3>
+            <span class="material-symbols-outlined text-purple-500 text-2xl">category</span>
+          </div>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {analytics.topCategories.length}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Con tráfico reciente
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Most Viewed Posts -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">emoji_events</span>
+            Posts Más Visitados
+          </h2>
+          <div class="space-y-4">
+            {analytics.mostViewed.slice(0, 10).map((post, index) => (
+              <div class="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                  {index + 1}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <a 
+                    href={`/${post.slug}`}
+                    class="text-sm font-semibold text-gray-900 dark:text-white hover:text-primary transition-colors line-clamp-2"
+                  >
+                    {post.post_title || post.slug}
+                  </a>
+                  <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span class="flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">visibility</span>
+                      {formatNumber(parseInt(post.total_views))} vistas
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">person</span>
+                      {formatNumber(parseInt(post.total_unique_visitors))} únicos
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Top Categories -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-500">category</span>
+            Categorías Más Visitadas
+          </h2>
+          <div class="space-y-4">
+            {analytics.topCategories.slice(0, 10).map((category, index) => (
+              <div class="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">
+                  {index + 1}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <a 
+                    href={`/${category.category_slug}`}
+                    class="text-sm font-semibold text-gray-900 dark:text-white hover:text-purple-500 transition-colors"
+                  >
+                    {category.category_name || category.category_slug}
+                  </a>
+                  <div class="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    <span class="flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">visibility</span>
+                      {formatNumber(parseInt(category.views))} vistas
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">person</span>
+                      {formatNumber(parseInt(category.unique_visitors))} únicos
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Traffic Sources -->
+      {analytics.trafficSources.length > 0 && (
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 mb-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-blue-500">link</span>
+            Fuentes de Tráfico
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {analytics.trafficSources.map((source) => (
+              <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <p class="text-sm font-medium text-gray-900 dark:text-white truncate mb-2">
+                  {source.referrer}
+                </p>
+                <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                  <span>{formatNumber(parseInt(source.views))} vistas</span>
+                  <span>{formatNumber(parseInt(source.unique_visitors))} únicos</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Daily Stats Chart -->
+      {analytics.dailyStats.length > 0 && (
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-green-500">show_chart</span>
+            Tendencia Diaria
+          </h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                  <th class="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Fecha</th>
+                  <th class="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Vistas</th>
+                  <th class="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Únicos</th>
+                  <th class="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Posts</th>
+                  <th class="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Móvil</th>
+                  <th class="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Desktop</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.dailyStats.slice(0, 14).map((day) => (
+                  <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="py-3 px-4 text-gray-900 dark:text-white">
+                      {new Date(day.date).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })}
+                    </td>
+                    <td class="text-right py-3 px-4 text-gray-900 dark:text-white font-medium">
+                      {formatNumber(parseInt(day.total_views))}
+                    </td>
+                    <td class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">
+                      {formatNumber(parseInt(day.unique_visitors))}
+                    </td>
+                    <td class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">
+                      {formatNumber(parseInt(day.post_views))}
+                    </td>
+                    <td class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">
+                      {formatNumber(parseInt(day.mobile_views))}
+                    </td>
+                    <td class="text-right py-3 px-4 text-gray-600 dark:text-gray-400">
+                      {formatNumber(parseInt(day.desktop_views))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <!-- API Info -->
+      <div class="mt-8 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+        <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
+          📊 API de Analytics Disponible
+        </h3>
+        <p class="text-sm text-blue-700 dark:text-blue-300 mb-4">
+          Puedes acceder a los datos de analytics mediante la API:
+        </p>
+        <div class="space-y-2 text-xs font-mono bg-white dark:bg-gray-800 p-4 rounded-lg">
+          <p class="text-gray-700 dark:text-gray-300">/api/analytics.json?type=most-viewed&days=30&limit=10</p>
+          <p class="text-gray-700 dark:text-gray-300">/api/analytics.json?type=top-categories&days=30&limit=10</p>
+          <p class="text-gray-700 dark:text-gray-300">/api/analytics.json?type=daily-stats&days=30</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

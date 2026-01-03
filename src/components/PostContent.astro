@@ -4,9 +4,10 @@
  * Diseño moderno basado en referencia visual
  */
 import ShareWhatsApp from './ShareWhatsApp.astro';
-import { getAllPosts } from '../lib/wordpress';
+import { getAllPosts, getPostBySlug } from '../lib/wordpress';
 import { getPostImage } from '../utils/getPostImage';
 import { getReadingTime } from '../utils/readingTime';
+import { getMostViewedPosts } from '../lib/clickhouse';
 
 interface Props {
   post: {
@@ -53,9 +54,27 @@ const { post } = Astro.props;
 const { posts } = await getAllPosts();
 const relatedPosts = posts.slice(0, 3);
 
-// Para la sección "Más leídas" - usamos los posts más recientes por ahora
-// TODO: Implementar Query de posts más vistos desde WordPress
-const mostReadPosts = posts.slice(0, 4);
+// Para la sección "Más leídas" - obtener desde ClickHouse
+let mostReadPosts: any[] = [];
+try {
+  const mostViewedData = await getMostViewedPosts(4, 30);
+  
+  if (mostViewedData && mostViewedData.length > 0) {
+    const mostReadPostsPromises = mostViewedData.map(async (item: any) => {
+      const postData = await getPostBySlug(item.slug);
+      return postData;
+    });
+    
+    const resolvedPosts = await Promise.all(mostReadPostsPromises);
+    mostReadPosts = resolvedPosts.filter((p: any) => p !== null);
+  }
+} catch (error) {
+  console.log('No se pudieron obtener posts más visitados, usando posts recientes');
+}
+
+if (mostReadPosts.length === 0) {
+  mostReadPosts = posts.slice(0, 4);
+}
 
 // Obtener la imagen destacada
 const featuredImage = getPostImage(post);
