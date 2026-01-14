@@ -417,7 +417,7 @@ export async function getFeaturedPostsWithImages() {
 export async function getBanner() {
   const query = gql`
     query GetBanner {
-      banner(id: "cG9zdDo5MDc4NA==") {
+      banner(id: "cG9zdDo5MTgyNQ==") {
         id
         bannerFields {
           url
